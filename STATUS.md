@@ -1,5 +1,12 @@
 # Stato del progetto
 
+## Restyling Wine Boutique · 24 novembre 2026
+
+- Aggiornata la carta pubblica con identità avorio, schede vino, intestazione bilingue compatta, gerarchia geografica, tab con icone e filtri con conteggio e selezioni rimovibili.
+- Verifica sulla RPC ufficiale di Enoteca Wine Art. L'amministratore ha confermato che il Gavi Marne Bianco era privo di associazioni di affinamento. Il Nebbiolo Rosalba mostra «In Acciaio» nei Rosé e il Tavoleto «In Tonneau di Rovere» nei Rossi, anche su Vercel. Il form legge le associazioni da `swm_wine_aging`. Un collaudo isolato su un vino esistente ha verificato salvataggio con `swm_save_wine`, ricaricamento del form, persistenza di due metodi e visualizzazione pubblica.
+- La carta di produzione su Vercel ha risposto con `Cache-Control: private, no-cache, no-store` e `X-Vercel-Cache: MISS` durante il controllo precedente al rilascio Wine Boutique. Vercel avvia la pubblicazione automaticamente dai push su `main`.
+- Lint, TypeScript e build di produzione superati. Verifica browser a 320, 360, 390, 412, 768 e 1280 px con filtri, focus, lingua, tab persistenti e layout senza immagine.
+
 ## Fase 2 e prima pubblicazione di prova · 24 novembre 2026
 
 - Migrazione iniziale applicata e verificata sul progetto ufficiale dall'amministratore con 23/23 controlli positivi.
