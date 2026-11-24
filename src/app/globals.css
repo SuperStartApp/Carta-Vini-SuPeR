@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bordeaux: #711f3a;
+  --color-line: #e9e1e3;
+}
+
+body {
+  background: white;
+  color: #271c20;
+}
+
+@layer components {
+  .primary, .secondary {
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors;
+  }
+  .primary { @apply bg-bordeaux text-white hover:bg-[#56162b]; }
+  .secondary { @apply border border-line bg-white hover:bg-[#faf6f7]; }
+  .compact { @apply min-h-9 px-3 py-1.5; }
+  button { @apply cursor-pointer disabled:cursor-not-allowed disabled:opacity-50; }
+  :is(a,button,input,select,textarea,summary):focus-visible { outline: 2px solid #711f3a; outline-offset: 3px; }
+  label { @apply grid gap-1.5 text-sm font-medium; }
+  :is(input, select, textarea):not([type="checkbox"], [type="radio"], [type="hidden"]) {
+    @apply min-h-10 w-full min-w-0 rounded-lg border border-line bg-white px-3 py-2 text-base;
+  }
+  input[type="color"] { @apply !w-20; }
+  input[type="checkbox"] { @apply size-4 accent-bordeaux; }
+  summary { @apply cursor-pointer; }
+  fieldset { border: 0; padding: 0; }
+  .fields { @apply grid min-w-0 gap-4 sm:grid-cols-2; }
+  .fields.three { @apply sm:grid-cols-3; }
+  .check-field { @apply flex items-center gap-2; }
+  .panel { @apply rounded-2xl border border-line bg-white p-4 sm:p-6; }
+  .panel h2 { @apply text-lg font-semibold; }
+  .note { @apply text-sm text-[#6e5d62]; }
+  .error { @apply rounded-lg bg-[#fff0f3] px-3 py-2 text-sm text-bordeaux; }
+  .details { @apply rounded-lg border border-line p-3; }
+  .details summary { @apply font-medium; }
+  .admin-shell { @apply min-h-dvh bg-[#fbf9fa] md:grid md:grid-cols-[15.5rem_minmax(0,1fr)]; }
+  .sidebar { @apply flex min-w-0 flex-col gap-5 border-b border-line bg-white p-4 md:sticky md:top-0 md:h-dvh md:border-r md:border-b-0 md:p-6; }
+  .brand { @apply flex items-center gap-2 text-xl font-bold leading-none text-bordeaux; }
+  .brand small { @apply mt-1 block text-xs font-medium; }
+  .sidebar nav { @apply flex gap-1 overflow-x-auto md:grid; }
+  .sidebar nav a { @apply flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap hover:bg-[#f8eef1] hover:text-bordeaux; }
+  .sidebar-account { @apply flex items-center justify-between gap-2 md:mt-auto md:block md:space-y-2; }
+  .admin-main { @apply mx-auto w-full min-w-0 max-w-6xl p-4 sm:p-8 md:p-10; }
+  .admin-heading { @apply mb-6 flex flex-wrap items-center justify-between gap-3; }
+  .admin-heading h1 { @apply font-serif text-4xl leading-tight text-bordeaux; }
+  .admin-heading p { @apply mt-1 text-[#6e5d62]; }
+  .metric { @apply grid gap-2 hover:border-bordeaux/35; }
+  .metric svg { @apply text-bordeaux; }
+  .metric strong { @apply font-serif text-4xl; }
+  .record-list { @apply divide-y divide-line; }
+  .record-link { @apply flex items-center justify-between gap-3 rounded-lg p-3 hover:bg-[#faf6f7]; }
+  .record-link small { @apply mt-1 block text-sm text-[#6e5d62]; }
+  .tabs { @apply flex gap-2 overflow-x-auto pb-2; }
+  .tabs :is(a, button) { @apply min-h-10 shrink-0 rounded-full border border-line px-4 py-2 text-sm font-semibold whitespace-nowrap; }
+  .tabs :is([aria-current="page"], [aria-pressed="true"]) { @apply border-bordeaux bg-bordeaux text-white; }
+
+  .public-page {
+    --accent-line: color-mix(in srgb, var(--accent-ink) 23%, white);
+    @apply min-h-dvh bg-white pb-14;
+  }
+  .public-page :is(a, button, input, select, summary):focus-visible { outline-color: var(--accent-ink); }
+  .public-page input[type="checkbox"] { accent-color: var(--accent-ink); }
+  .public-wrap { @apply mx-auto max-w-4xl px-5 sm:px-10; }
+  .public-languages { @apply flex justify-end gap-1 pt-3; }
+  .public-languages button { @apply rounded-full px-3 py-1.5 text-sm; }
+  .public-languages button[aria-pressed="true"] { @apply bg-neutral-100 font-bold; color: var(--accent-ink); }
+  .public-header { @apply grid justify-items-center gap-2 pt-3 pb-6 text-center sm:pt-5 sm:pb-8; }
+  .public-logo { @apply grid min-h-12 min-w-12 place-items-center; color: var(--accent-ink); }
+  .public-header p { @apply text-sm font-semibold tracking-widest uppercase; color: var(--accent-ink); }
+  .public-header h1 { @apply font-serif text-5xl leading-none tracking-tight sm:text-6xl; color: var(--accent-ink); }
+  .public-tools { @apply grid gap-2 border-t pt-3 sm:grid-cols-[minmax(0,1fr)_auto]; border-color: var(--accent-line); }
+  .search-public { @apply flex items-center gap-3 rounded-xl border border-line px-3; }
+  .search-public input { @apply !border-0 !px-0; }
+  .public-filters { @apply rounded-xl border border-line px-3 py-2; }
+  .public-filters[open] { @apply sm:col-span-full; }
+  .public-filters summary { @apply flex items-center gap-2 font-semibold; }
+  .public-tabs {
+    @apply sticky top-0 z-10 -mx-1 mt-2 border-b bg-white px-1 py-2;
+    border-color: var(--accent-line);
+  }
+  .public-tabs button[aria-pressed="true"] {
+    background: var(--restaurant-accent);
+    border-color: var(--accent-ink);
+    color: var(--accent-tab-text);
+  }
+  .public-empty { @apply py-10 text-center text-neutral-600; }
+  .public-results { @apply flow-root; }
+  .country-group { @apply mt-4 sm:mt-6; }
+  .country-group h2 { @apply border-b pb-1 font-serif text-3xl sm:text-4xl; border-color: var(--accent-line); }
+  .region-group { @apply mt-3 sm:mt-4; }
+  .region-group h3 { @apply font-serif text-xl sm:text-2xl; }
+  .winery-group { @apply mt-2 sm:mt-3; }
+  .winery-group h4 { @apply text-sm font-semibold tracking-wide; }
+  .country-group :is(h2, h3, h4, h5), .wine-notes dt, .wine-prices dd { color: var(--accent-ink); }
+  .wine-row {
+    @apply grid grid-cols-[minmax(0,1fr)] items-start gap-3 border-b py-3 sm:gap-6 sm:py-4;
+    border-color: var(--accent-line);
+  }
+  .wine-row:has(> .wine-image) { grid-template-columns: clamp(4.5rem, 23vw, 9.5rem) minmax(0, 1fr); }
+  .wine-image { @apply h-[clamp(9rem,45vw,14rem)] w-full self-start object-contain; }
+  .wine-info { @apply min-w-0 wrap-break-word; }
+  .wine-name { @apply font-serif text-[clamp(1.2rem,4vw,1.65rem)] leading-tight font-semibold; }
+  .wine-vintage { @apply ml-1 inline-block text-[0.85em] font-normal tabular-nums; }
+  .wine-format { @apply mt-1 text-sm text-neutral-600; }
+  .wine-prices { @apply my-2 flex flex-wrap gap-x-4 gap-y-1 text-sm tabular-nums; }
+  .wine-prices div { @apply flex flex-wrap items-baseline gap-x-1.5; }
+  .wine-prices dt { @apply text-neutral-600; }
+  .wine-prices dd { @apply font-semibold; }
+  .wine-notes { @apply grid gap-1 text-sm leading-snug text-neutral-700; }
+  .wine-notes dt { @apply mr-1.5 inline font-semibold; }
+  .wine-notes dd { @apply inline whitespace-pre-line; }
+}
