@@ -45,6 +45,12 @@ La [migrazione della fase 4.1](supabase/migrations/20261125000002_swm_drink_list
 1. Nel tab **Drink List** del ristorante, aggiungere le bevande. Per un ristorante senza categorie, usare **Prepara le categorie iniziali** o creare categorie personalizzate.
 2. Attivare **Drink List attiva** nelle impostazioni del ristorante. Il tab pubblico **Drink** compare sul link esistente quando il ristorante è pubblicato e la lista contiene almeno una bevanda disponibile.
 
+### Denominazioni e caratteristiche dei vini
+
+La [migrazione del catalogo vini della fase 4.2](supabase/migrations/20261125000003_swm_wine_appellations.sql) è installata sul Supabase ufficiale. L'amministratore ha confermato gli 8 controlli post-installazione. La migrazione aggiunge anagrafiche e associazioni senza valorizzare le schede esistenti.
+
+Nel catalogo, denominazione, specificazione e caratteristiche sono facoltative e indipendenti. Le specificazioni già in uso vengono suggerite dal catalogo. Per aggiungere una classificazione, selezionare **Nuova denominazione…** nella scheda del vino. In carta, i nuovi filtri valgono per la categoria selezionata.
+
 ### Configurare l'account SuPeR
 
 1. In **Authentication → Users**, creare o individuare l'utente SuPeR. Per un nuovo utente con password, usare **Add user → Create new user**, inserire l'email e la password e confermare l'email secondo il flusso amministrativo del progetto.

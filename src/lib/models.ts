@@ -3,6 +3,8 @@ export type Country = Label & { code: string };
 export type Region = Label & { country_id: string };
 export type Winery = { id: string; name: string; reference_region_id: string | null };
 export type Grape = { id: string; name: string };
+export type Appellation = { id: string; name: string };
+export type WineMetadata = { appellations: Appellation[]; characteristics: Label[]; specifications: string[] };
 export type References = {
   categories: Label[]; countries: Country[]; regions: Region[];
   wineries: Winery[]; grapes: Grape[]; aging: Label[];
@@ -14,6 +16,7 @@ export type Wine = {
   suggested_bottle_price: number | null; suggested_glass_price: number | null;
   alcohol_pct: number | null; nose_it: string | null; nose_en: string | null;
   palate_it: string | null; palate_en: string | null;
+  appellation_id?: string | null; appellation_detail?: string | null;
 };
 export type WineGrape = { grape_id: string; percentage: number | null };
 export type Restaurant = {

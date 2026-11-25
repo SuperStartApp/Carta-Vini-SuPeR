@@ -26,6 +26,12 @@ L'amministratore ha applicato la migrazione originaria Cocktail List al Supabase
 
 `publicRestaurantUrl` costruisce sul server l'indirizzo completo del ristorante tramite `NEXT_PUBLIC_APP_URL` e lo slug esistente. Copia e apertura condividono lo stesso URL. La funzione è il punto di riuso previsto per i futuri QR Code.
 
+La fase 4.2 aggiunge al vino di catalogo una denominazione facoltativa e una specificazione libera con suggerimenti dal catalogo. Le caratteristiche bilingui sono facoltative, indipendenti dalla categoria e combinabili. `swm_appellations` normalizza le classificazioni per unicità. `swm_wine_characteristics` e `swm_wine_characteristic_links` consentono di riusare le stesse caratteristiche tra vini. Anfora usa l'anagrafica Affinamenti.
+
+La firma di `swm_save_wine` resta compatibile con il client precedente. Le chiavi nuove omesse conservano i dati esistenti. `appellation_id: null`, `appellation_detail: null` e `characteristic_ids: []` rimuovono ciascuno i propri dati. La RPC pubblica aggiunge solo le proprietà valorizzate. I filtri delle nuove anagrafiche si riferiscono alla categoria selezionata e cambiare categoria li azzera. Una selezione multipla di caratteristiche richiede la presenza di tutte.
+
+La migrazione della fase 4.2 è applicata al Supabase ufficiale, con 8/8 controlli post-installazione confermati dall'amministratore.
+
 Entrambe le migrazioni sono installate sul Supabase ufficiale. L'amministratore ha confermato i 23 controlli dello schema iniziale e il collaudo operativo con Enoteca Wine Art. Il restyling Wine Boutique usa fondo avorio, schede chiare con bottiglie affiancate ai dettagli, palette del ristorante e tab persistenti. Il pannello dei filtri usa una finestra centrata su desktop e si apre dal basso su smartphone. Prima di applicare i filtri mostra il numero di vini corrispondenti in tutte le categorie.
 
 ## Schema definitivo

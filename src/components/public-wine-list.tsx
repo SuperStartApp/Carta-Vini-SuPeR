@@ -16,6 +16,7 @@ export type PublicWine = {
   image_url?: string; vintage?: number; volume_ml?: number; alcohol_pct?: number;
   nose_it?: string; nose_en?: string; palate_it?: string; palate_en?: string;
   grapes: (Named & { percentage?: number })[]; aging: Label[];
+  appellation?: Named; appellation_detail?: string; characteristics?: Label[];
 };
 export type PublicMenu = {
   restaurant: { name: string; slug: string; logo_url?: string; primary_color: string };
@@ -36,6 +37,7 @@ const copy = {
     close: "Chiudi", remove: "Rimuovi", findOption: "Cerca opzione", showWines: "Mostra vini",
     menu: "Menù", navigation: "Profilo del ristorante", backToDish: "Torna al piatto",
     drink: "Drink", drinkTagline: "Un brindisi a ogni occasione.",
+    appellation: "Denominazione", characteristics: "Caratteristiche",
   },
   en: {
     list: "Wine list", search: "Search the wine list", filter: "Filters", all: "All",
@@ -47,6 +49,7 @@ const copy = {
     close: "Close", remove: "Remove", findOption: "Find option", showWines: "Show wines",
     menu: "Menu", navigation: "Restaurant sections", backToDish: "Back to the dish",
     drink: "Drink", drinkTagline: "A toast for every occasion.",
+    appellation: "Appellation", characteristics: "Wine characteristics",
   },
 };
 
@@ -121,6 +124,12 @@ function WineRow({ wine, lang, money, onBack }: { wine: PublicWine; lang: Langua
   const grapes = wine.grapes.map(grape =>
     grape.percentage == null ? grape.name : `${grape.name} ${number.format(grape.percentage)}%`).join(", ");
   const aging = wine.aging.map(method => label(method, lang)).filter(Boolean).join(", ");
+  const detail = wine.appellation_detail?.trim();
+  const classification = [
+    detail && searchable(detail) !== searchable(wine.name) ? detail : "",
+    wine.appellation?.name,
+  ].filter(Boolean).join(" ");
+  const characteristics = (wine.characteristics ?? []).map(item => ({ id: item.id, name: label(item, lang) })).filter(item => item.name);
   const notes = [
     { title: t.grapes, value: grapes, Icon: Grape },
     { title: t.aging, value: aging, Icon: Cylinder },
@@ -131,6 +140,10 @@ function WineRow({ wine, lang, money, onBack }: { wine: PublicWine; lang: Langua
     {image && <ExternalImage key={image} url={image} alt={wine.name} className="wine-image" />}
     <div className="wine-info">
       <h5 className="wine-name">{wine.name}</h5>
+      {classification && <p className="wine-appellation">{classification}</p>}
+      {characteristics.length > 0 && <ul className="wine-characteristics" aria-label={t.characteristics}>
+        {characteristics.map(item => <li key={item.id}>{item.name}</li>)}
+      </ul>}
       {facts.length > 0 && <ul className="wine-facts">{facts.map(fact => <li key={String(fact)}>{fact}</li>)}</ul>}
       <dl className="wine-prices">
         <div><dt>{t.bottle}</dt><dd>{money.format(wine.bottle_price)}</dd></div>
@@ -155,6 +168,8 @@ function matchesFilters(wine: PublicWine, filters: WineFilters, ignore?: SelectF
     && (!filters.grape || ignore === "grape" || wine.grapes.some(grape => grape.id === filters.grape))
     && (!filters.aging || ignore === "aging" || wine.aging.some(aging => aging.id === filters.aging))
     && (!filters.price || ignore === "price" || priceBand(wine.bottle_price) === filters.price)
+    && (!filters.appellation || ignore === "appellation" || wine.appellation?.id === filters.appellation)
+    && filters.characteristics.every(id => wine.characteristics?.some(item => item.id === id))
     && (!filters.glass || wine.glass_price != null);
 }
 
@@ -185,11 +200,22 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
   const query = searchable(search);
   const searched = menu.wines.filter(w => {
     const text = [w.name, w.winery.name, label(w.country, lang), label(w.region, lang), w.vintage,
+      w.appellation?.name, w.appellation_detail, ...(w.characteristics ?? []).map(item => label(item, lang)),
       ...w.grapes.map(g => g.name), ...w.aging.map(a => label(a, lang))].join(" ");
     return searchable(text).includes(query);
   });
+  const scoped = Boolean(filters.appellation || filters.characteristics.length);
+  const unscoped = (current: WineFilters) => ({ ...current, appellation: "", characteristics: [] });
+  const base = searched.filter(w => matchesFilters(w, unscoped(filters)));
+  const categoryIds = new Set(base.map(w => w.category_id));
+  // Una combinazione senza risultati resta nella sua categoria e può essere rimossa.
+  const tabs = menu.wine_categories.filter(c => categoryIds.has(c.id) || (scoped && c.id === category));
+  const active = tabs.find(c => c.id === category)?.id ?? tabs[0]?.id;
+  const matching = (current: WineFilters) => searched.filter(w =>
+    (!(current.appellation || current.characteristics.length) || w.category_id === active) && matchesFilters(w, current));
+
   function getOptions(current: WineFilters): FilterOptions {
-    const relevant = (key: SelectFilter) => searched.filter(w => matchesFilters(w, current, key));
+    const relevant = (key: SelectFilter) => searched.filter(w => matchesFilters(w, unscoped(current), key));
     const names = (key: SelectFilter, getItems: (wine: PublicWine) => Named[]) => {
       const items = relevant(key).flatMap(getItems);
       if (current[key]) {
@@ -205,6 +231,7 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
       ["50up", `${t.from} ${money.format(50)}`],
     ];
     const bands = new Set<string>(relevant("price").map(w => priceBand(w.bottle_price)));
+    const categoryWines = menu.wines.filter(w => w.category_id === active);
     return {
       country: names("country", w => [localized(w.country)]),
       region: names("region", w => [localized(w.region)]),
@@ -212,12 +239,11 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
       grape: names("grape", w => w.grapes),
       aging: names("aging", w => w.aging.map(localized)),
       price: prices.filter(([id]) => id === current.price || bands.has(id)),
+      appellation: options(categoryWines.flatMap(w => w.appellation ? [w.appellation] : []), lang),
+      characteristics: options(categoryWines.flatMap(w => (w.characteristics ?? []).map(localized)), lang),
     };
   }
-  const visible = searched.filter(w => matchesFilters(w, filters));
-  const categoryIds = new Set(visible.map(w => w.category_id));
-  const tabs = menu.wine_categories.filter(c => categoryIds.has(c.id));
-  const active = tabs.find(c => c.id === category)?.id ?? tabs[0]?.id;
+  const visible = matching(filters);
   const visibleGroups = groups(visible.filter(w => w.category_id === active), lang);
   const accent = /^#[0-9a-f]{6}$/i.test(menu.restaurant.primary_color) ? menu.restaurant.primary_color : "#711f3a";
   const logo = safeImage(menu.restaurant.logo_url);
@@ -229,6 +255,7 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
     if (bar && list && bar.getBoundingClientRect().top <= 1) {
       window.scrollTo(0, window.scrollY + list.getBoundingClientRect().top - bar.offsetHeight);
     }
+    setFilters(current => unscoped(current));
     setCategory(id);
   }
 
@@ -261,6 +288,7 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
             for (const key of selectFilters) {
               if (matchesFilters(wine, { ...emptyFilters, [key]: current[key] })) compatible[key] = current[key];
             }
+            compatible.characteristics = current.characteristics.filter(id => wine.characteristics?.some(item => item.id === id));
             return compatible;
           });
           setCategory(wine.category_id);
@@ -272,8 +300,11 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
           <label className="search-public"><Search size={18} aria-hidden="true" />
             <input type="search" value={search} placeholder={t.search} aria-label={t.search} onChange={e => setSearch(e.target.value)} />
           </label>
-          <WineFilterPanel active={filters} count={draft => searched.filter(w => matchesFilters(w, draft)).length}
-            options={getOptions} onApply={setFilters} copy={t} />
+          <WineFilterPanel active={filters} count={draft => matching(draft).length}
+            options={getOptions} onApply={draft => {
+              if ((draft.appellation || draft.characteristics.length) && active) setCategory(active);
+              setFilters(draft);
+            }} copy={t} />
         </div>
         {tabs.length > 0 && <nav ref={tabsRef} className="tabs public-tabs" aria-label={t.categories}>
           {tabs.map(c => {

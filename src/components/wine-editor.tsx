@@ -3,17 +3,19 @@
 import { useRef, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { saveReference, saveWine } from "../app/admin/actions";
-import type { ReferenceKind, References, Wine, WineGrape } from "../lib/models";
+import type { ReferenceKind, References, Wine, WineGrape, WineMetadata } from "../lib/models";
 import { ActionForm } from "./action-form";
 import { ImageField, ReferenceFields, ReferenceTitle, RegionOptions } from "./admin-fields";
 
 const normalize = (name: string) => name.trim().toLocaleLowerCase("it");
 
-export function WineEditor({ initial, wine, initialGrapes, initialAging, suggestedWinery }: {
+export function WineEditor({ initial, metadata, wine, initialGrapes, initialAging, initialCharacteristics, suggestedWinery }: {
   initial: References;
+  metadata: WineMetadata;
   wine?: Wine;
   initialGrapes: WineGrape[];
   initialAging: string[];
+  initialCharacteristics: string[];
   suggestedWinery?: string;
 }) {
   const [refs, setRefs] = useState(initial);
@@ -21,6 +23,7 @@ export function WineEditor({ initial, wine, initialGrapes, initialAging, suggest
   const [wineryText, setWineryText] = useState(winery?.name ?? "");
   const [region, setRegion] = useState(wine?.region_id ?? winery?.reference_region_id ?? "");
   const [category, setCategory] = useState(wine?.category_id ?? "");
+  const [appellation, setAppellation] = useState(wine?.appellation_id ?? "");
   const [grapes, setGrapes] = useState(initialGrapes);
   const [aging, setAging] = useState(initialAging);
   const [quick, setQuick] = useState<ReferenceKind>();
@@ -65,6 +68,26 @@ export function WineEditor({ initial, wine, initialGrapes, initialAging, suggest
         </div>
       </div>
       {wineryText && !wineryId && <p className="note">Seleziona una cantina dai suggerimenti o creala con Nuova.</p>}
+      <div className="fields">
+        <label>Denominazione<select name="appellation_id" aria-label="Denominazione" value={appellation} onChange={e => setAppellation(e.target.value)}>
+          <option value="">Nessuna</option>
+          {metadata.appellations.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+          <option value="new">Nuova denominazione…</option>
+        </select></label>
+        <label>Specificazione della denominazione
+          <input name="appellation_detail" list="appellation-details" maxLength={160} defaultValue={wine?.appellation_detail ?? ""} />
+          <datalist id="appellation-details">{metadata.specifications.map(item => <option key={item} value={item} />)}</datalist>
+        </label>
+        {appellation === "new" && <label>Nuova denominazione<input name="appellation_name" maxLength={80} required /></label>}
+      </div>
+      <fieldset className="grid gap-2">
+        <legend className="mb-2 text-sm font-semibold">Caratteristiche del vino</legend>
+        <div className="flex flex-wrap gap-2">{metadata.characteristics.map(item =>
+          <label className="check-field min-h-10 rounded-lg border border-line px-2" key={item.id}>
+            <input name="characteristic_id" type="checkbox" value={item.id} defaultChecked={initialCharacteristics.includes(item.id)} />
+            {item.name_it}
+          </label>)}</div>
+      </fieldset>
       <div className="fields my-3">
         <div className="grid gap-2 content-start">
           <div className="flex gap-2 items-end">

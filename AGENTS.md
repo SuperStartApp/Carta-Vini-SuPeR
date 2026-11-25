@@ -21,3 +21,4 @@
 - Mantenere Drink List indipendente da Menù e Carta vini. I nomi tecnici `swm_cocktail_*`, `swm_cocktails`, `swm_save_cocktail` e `cocktail_enabled` sono storici. Pubblicare solo le bevande disponibili dei ristoranti con il flag attivo e omettere le dichiarazioni automatiche sugli allergeni.
 - La migrazione Cocktail List è installata sul Supabase ufficiale, con 10/10 controlli post-installazione confermati dall'amministratore. Il collaudo operativo è a cura dell'amministratore.
 - Generare i link pubblici tramite `publicRestaurantUrl` e `NEXT_PUBLIC_APP_URL`. Usare lo stesso generatore per i futuri QR Code.
+- Tenere denominazioni e caratteristiche nel catalogo centralizzato, indipendenti dalle categorie della carta. I salvataggi vino che omettono i relativi campi devono conservare i valori esistenti. `null` rimuove denominazione o specificazione e `[]` rimuove le caratteristiche.

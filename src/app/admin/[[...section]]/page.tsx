@@ -6,7 +6,7 @@ import { AssignmentBoard, CatalogList, PublicLink } from "../../../components/ad
 import { WineEditor } from "../../../components/wine-editor";
 import { RestaurantMenu } from "../restaurant-menu";
 import { publicRestaurantUrl } from "../../../lib/public-restaurant-url";
-import { getReferences, getWines } from "../../../lib/data";
+import { getReferences, getWineMetadata, getWines } from "../../../lib/data";
 import { referenceTitles, type Assignment, type Label, type ReferenceKind, type Restaurant, type Wine, type WineGrape } from "../../../lib/models";
 import { records, requireAdmin } from "../../../lib/supabase";
 
@@ -48,24 +48,27 @@ async function Wines({ id, query }: { id?: string; query: Query }) {
     return <><Heading title="Catalogo vini"><Add href="/admin/vini/nuovo">Nuovo vino</Add></Heading><CatalogList wines={wines} refs={refs} /></>;
   }
   const { db } = await requireAdmin();
-  const refs = await getReferences();
+  const [refs, metadata] = await Promise.all([getReferences(), getWineMetadata()]);
   if (id === "nuovo") return <>
     <Heading title="Nuovo vino"><Link href="/admin/vini" className="secondary">Catalogo</Link></Heading>
-    <WineEditor initial={refs} initialGrapes={[]} initialAging={[]} suggestedWinery={typeof query.cantina === "string" ? query.cantina : undefined} />
+    <WineEditor initial={refs} metadata={metadata} initialGrapes={[]} initialAging={[]} initialCharacteristics={[]}
+      suggestedWinery={typeof query.cantina === "string" ? query.cantina : undefined} />
   </>;
   if (!uuid.test(id)) notFound();
-  const [wineResult, grapeResult, agingResult] = await Promise.all([
+  const [wineResult, grapeResult, agingResult, characteristicResult] = await Promise.all([
     db.from("swm_wines").select("*").eq("id", id),
     db.from("swm_wine_grapes").select("grape_id,percentage").eq("wine_id", id),
     db.from("swm_wine_aging").select("aging_method_id").eq("wine_id", id),
+    db.from("swm_wine_characteristic_links").select("characteristic_id").eq("wine_id", id),
   ]);
   const [wine] = records<Wine>(wineResult);
   if (!wine) notFound();
   return <>
     <Heading title={wine.name}><Link href="/admin/vini" className="secondary">Catalogo</Link></Heading>
     {query.salvato === "1" && <p role="status" className="note mb-3">Scheda vino salvata.</p>}
-    <WineEditor key={wine.id} initial={refs} wine={wine} initialGrapes={records<WineGrape>(grapeResult)}
-      initialAging={records<{ aging_method_id: string }>(agingResult).map(row => row.aging_method_id)} />
+    <WineEditor key={`${wine.id}:${wine.appellation_id ?? ""}`} initial={refs} metadata={metadata} wine={wine} initialGrapes={records<WineGrape>(grapeResult)}
+      initialAging={records<{ aging_method_id: string }>(agingResult).map(row => row.aging_method_id)}
+      initialCharacteristics={records<{ characteristic_id: string }>(characteristicResult).map(row => row.characteristic_id)} />
   </>;
 }
 

@@ -1,5 +1,13 @@
 # Stato del progetto
 
+## Fase 4.2 · 25 novembre 2026
+
+- Denominazioni, specificazioni e caratteristiche facoltative nel catalogo e nella carta pubblica. I nuovi filtri sono limitati alla categoria attiva e la selezione multipla richiede tutte le caratteristiche scelte.
+- Preparata la migrazione `20261125000003_swm_wine_appellations.sql`. Su PostgreSQL isolato verificati i 33 controlli precedenti, le anagrafiche, Anfora inserita solo se assente, l'atomicità, RLS, campi indipendenti e compatibilità con i salvataggi precedenti, Menù e Drink List.
+- Lint, TypeScript e build superati. Collaudo Chrome con Auth/API isolate da 320 a 1280 px. Verificati form e suggerimenti, rimozione dei valori, combinazioni dei filtri, ricerca IT/EN, Orange Wine nei Bianchi, abbinamenti e link canonici.
+- L'amministratore ha confermato l'installazione della migrazione sul Supabase ufficiale e l'esito positivo di tutti gli 8 controlli post-installazione. Rilascio su `main` autorizzato.
+- Verifica in sola lettura della RPC ufficiale per Enoteca Wine Art ed Enosteria del Gallo completata. Entrambe hanno restituito 6 vini e 8 piatti con abbinamenti coerenti. Al momento della verifica i nuovi campi non erano valorizzati nei vini pubblicati. Il generatore dei link ha mantenuto il dominio canonico per entrambi gli slug anche simulando un deployment Vercel.
+
 ## Fase 4.1 · 25 novembre 2026
 
 - Drink List con etichette aggiornate, identità Wine Boutique e icone per le categorie riconoscibili.

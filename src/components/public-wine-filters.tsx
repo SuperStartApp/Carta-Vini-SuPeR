@@ -4,18 +4,19 @@ import { useRef, useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 import { searchable } from "../lib/search";
 
-export const emptyFilters = { country: "", region: "", winery: "", grape: "", aging: "", price: "", glass: false };
+export const emptyFilters = { country: "", region: "", winery: "", grape: "", aging: "", price: "", glass: false,
+  appellation: "", characteristics: [] as string[] };
 export type WineFilters = typeof emptyFilters;
-export type SelectFilter = Exclude<keyof WineFilters, "glass">;
-export const selectFilters: SelectFilter[] = ["country", "region", "winery", "grape", "aging", "price"];
-export type FilterOptions = Record<SelectFilter, [string, string][]>;
+export type SelectFilter = Exclude<keyof WineFilters, "glass" | "characteristics">;
+export const selectFilters: SelectFilter[] = ["country", "region", "winery", "grape", "aging", "price", "appellation"];
+export type FilterOptions = Record<SelectFilter | "characteristics", [string, string][]>;
 
 export function WineFilterPanel({ active, count, options, onApply, copy }: {
   active: WineFilters;
   count: (filters: WineFilters) => number;
   options: (filters: WineFilters) => FilterOptions;
   onApply: (filters: WineFilters) => void;
-  copy: Record<SelectFilter, string> & { filter: string; all: string; glass: string; reset: string; close: string; remove: string; findOption: string; showWines: string };
+  copy: Record<SelectFilter | "characteristics", string> & { filter: string; all: string; glass: string; reset: string; close: string; remove: string; findOption: string; showWines: string };
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -24,7 +25,7 @@ export function WineFilterPanel({ active, count, options, onApply, copy }: {
   const activeOptions = options(active);
   const draftOptions = options(draft);
   const activeKeys = selectFilters.filter(key => active[key]);
-  const activeCount = activeKeys.length + Number(active.glass);
+  const activeCount = activeKeys.length + Number(active.glass) + active.characteristics.length;
   const close = () => dialog.current?.close();
 
   function open() {
@@ -46,6 +47,12 @@ export function WineFilterPanel({ active, count, options, onApply, copy }: {
       })}
       {active.glass && <button type="button" onClick={() => onApply({ ...active, glass: false })}
         aria-label={`${copy.remove}: ${copy.glass}`}>{copy.glass}<X size={14} aria-hidden="true" /></button>}
+      {active.characteristics.map(id => {
+        const value = activeOptions.characteristics.find(([key]) => key === id)?.[1] ?? copy.characteristics;
+        return <button type="button" key={id}
+          onClick={() => onApply({ ...active, characteristics: active.characteristics.filter(item => item !== id) })}
+          aria-label={`${copy.remove}: ${value}`}>{value}<X size={14} aria-hidden="true" /></button>;
+      })}
     </div>}
     <dialog className="boutique-filter-dialog" ref={dialog} aria-labelledby="wine-filter-title"
       onClose={() => trigger.current?.focus()} onClick={event => { if (event.target === event.currentTarget) close(); }}>
@@ -57,6 +64,7 @@ export function WineFilterPanel({ active, count, options, onApply, copy }: {
         <div className="filter-sheet-fields">
           {selectFilters.map(key => {
             const items = draftOptions[key];
+            if (key === "appellation" && !items.length) return null;
             const search = searchable(queries[key] ?? "");
             const visible = items.filter(([id, name]) => id === draft[key] || searchable(name).includes(search));
             return <div className="grid gap-1.5" key={key}>
@@ -71,6 +79,16 @@ export function WineFilterPanel({ active, count, options, onApply, copy }: {
               </select>
             </div>;
           })}
+          {draftOptions.characteristics.length > 0 && <fieldset className="col-span-full">
+            <legend className="mb-2 text-sm font-medium">{copy.characteristics}</legend>
+            <div className="flex flex-wrap gap-2">{draftOptions.characteristics.map(([id, name]) =>
+              <label key={id} className="check-field min-h-10 rounded-lg border border-line px-2">
+                <input type="checkbox" checked={draft.characteristics.includes(id)} onChange={event => setDraft({
+                  ...draft, characteristics: event.target.checked ? [...draft.characteristics, id] : draft.characteristics.filter(item => item !== id),
+                })} />
+                {name}
+              </label>)}</div>
+          </fieldset>}
           <label className="check-field col-span-full">
             <input type="checkbox" checked={draft.glass} onChange={event => setDraft({ ...draft, glass: event.target.checked })} />
             {copy.glass}

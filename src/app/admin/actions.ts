@@ -91,6 +91,10 @@ export async function saveWine(form: FormData) {
   let savedId: string;
   try {
     const id = optional(form, "id");
+    const appellation = optional(form, "appellation_id");
+    const appellationName = appellation === "new" ? required(form, "appellation_name", "Nuova denominazione").replace(/\s+/g, " ") : null;
+    const detail = optional(form, "appellation_detail");
+    if ((appellationName?.length ?? 0) > 80 || (detail?.length ?? 0) > 160) throw new Error("Denominazione o specificazione troppo lunga.");
     const wine = {
       id, name: required(form, "name", "Nome vino"),
       winery_id: required(form, "winery_id", "Cantina"),
@@ -104,6 +108,10 @@ export async function saveWine(form: FormData) {
       alcohol_pct: amount(form, "alcohol_pct", "Gradazione", 0, 100),
       nose_it: optional(form, "nose_it"), nose_en: optional(form, "nose_en"),
       palate_it: optional(form, "palate_it"), palate_en: optional(form, "palate_en"),
+      appellation_id: appellation === "new" ? null : appellation,
+      appellation_detail: detail,
+      ...(appellationName ? { appellation_name: appellationName } : {}),
+      characteristic_ids: values(form, "characteristic_id"),
     };
     const grapes = values(form, "grape_id").map(grape_id => ({
       grape_id, percentage: amount(form, `grape_${grape_id}`, "Percentuale vitigno", 0.01, 100),

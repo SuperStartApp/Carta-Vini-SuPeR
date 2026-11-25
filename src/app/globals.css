@@ -142,6 +142,9 @@ body {
   .wine-image { @apply h-[clamp(10.5rem,49vw,15rem)] w-full self-center object-contain; }
   .wine-info { @apply min-w-0 wrap-break-word; }
   .wine-name { @apply font-serif text-[clamp(1.2rem,4vw,1.65rem)] leading-tight font-semibold; }
+  .wine-appellation { @apply mt-1 text-sm font-medium; color: var(--accent-ink); }
+  .wine-characteristics { @apply mt-2 flex flex-wrap gap-1 text-xs leading-snug; color: var(--accent-ink); }
+  .wine-characteristics li { @apply rounded-full px-2 py-1; background: var(--accent-wash); }
   .wine-facts { @apply mt-2 flex flex-wrap gap-1 text-xs text-neutral-700 tabular-nums; }
   .wine-facts li { @apply rounded-full px-2 py-0.5; background: var(--accent-wash); }
   .wine-prices { @apply my-2 flex flex-wrap gap-x-4 gap-y-1 text-sm tabular-nums; }
