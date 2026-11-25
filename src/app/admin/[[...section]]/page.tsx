@@ -6,7 +6,7 @@ import { AssignmentBoard, CatalogList, PublicLink } from "../../../components/ad
 import { WineEditor } from "../../../components/wine-editor";
 import { RestaurantMenu } from "../restaurant-menu";
 import { publicRestaurantUrl } from "../../../lib/public-restaurant-url";
-import { getAdminRows, getAppellations, getReferences, getWineMetadata, getWines } from "../../../lib/data";
+import { getAdminRows, getAppellations, getAssignmentRestaurants, getCatalogAssignments, getReferences, getWineMetadata, getWines } from "../../../lib/data";
 import { referenceTitles, type Assignment, type Label, type ReferenceKind, type Restaurant, type Wine, type WineGrape } from "../../../lib/models";
 import { records, requireAdmin } from "../../../lib/supabase";
 
@@ -44,15 +44,20 @@ async function Dashboard() {
 
 async function Wines({ id, query }: { id?: string; query: Query }) {
   if (!id) {
-    const [wines, refs, appellations] = await Promise.all([getWines(), getReferences(), getAppellations()]);
-    return <><Heading title="Catalogo vini" /><CatalogList wines={wines} refs={refs} appellations={appellations} /></>;
+    const [wines, refs, appellations, restaurants, assignments] = await Promise.all([
+      getWines(), getReferences(), getAppellations(), getAssignmentRestaurants(), getCatalogAssignments(),
+    ]);
+    return <><Heading title="Catalogo vini" /><CatalogList wines={wines} refs={refs} appellations={appellations}
+      restaurants={restaurants} assignments={assignments} /></>;
   }
   const { db } = await requireAdmin();
-  const [refs, metadata] = await Promise.all([getReferences(), getWineMetadata()]);
+  const [refs, metadata, restaurants] = await Promise.all([
+    getReferences(), getWineMetadata(), id === "nuovo" ? getAssignmentRestaurants() : undefined,
+  ]);
   if (id === "nuovo") return <>
     <Heading title="Nuovo vino"><Link href="/admin/vini" className="secondary">Catalogo</Link></Heading>
     <WineEditor initial={refs} metadata={metadata} initialGrapes={[]} initialAging={[]} initialCharacteristics={[]}
-      suggestedWinery={typeof query.cantina === "string" ? query.cantina : undefined} />
+      restaurants={restaurants} suggestedWinery={typeof query.cantina === "string" ? query.cantina : undefined} />
   </>;
   if (!uuid.test(id)) notFound();
   const [wineResult, grapeResult, agingResult, characteristicResult] = await Promise.all([
@@ -66,6 +71,8 @@ async function Wines({ id, query }: { id?: string; query: Query }) {
   return <>
     <Heading title={wine.name}><Link href="/admin/vini" className="secondary">Catalogo</Link></Heading>
     {query.salvato === "1" && <p role="status" className="note mb-3">Scheda vino salvata.</p>}
+    {query.salvato === "1" && typeof query.assegnati === "string" && /^[1-9]\d*$/.test(query.assegnati)
+      && <p role="status" className="note mb-3">Ristoranti assegnati: {query.assegnati}.</p>}
     <WineEditor key={`${wine.id}:${wine.appellation_id ?? ""}`} initial={refs} metadata={metadata} wine={wine} initialGrapes={records<WineGrape>(grapeResult)}
       initialAging={records<{ aging_method_id: string }>(agingResult).map(row => row.aging_method_id)}
       initialCharacteristics={records<{ characteristic_id: string }>(characteristicResult).map(row => row.characteristic_id)} />

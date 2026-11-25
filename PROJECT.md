@@ -34,6 +34,10 @@ La migrazione della fase 4.2 è applicata al Supabase ufficiale, con 8/8 control
 
 La fase 4.3 organizza Catalogo, Carta vini, Menù e Drink List con schede per categoria, conteggi e pagine da 25 risultati. Le schede contano l'intero inventario della categoria. Il riepilogo mostra l'intervallo dei risultati dopo la ricerca e i filtri. Il gestionale conserva la vista al ritorno dalla scheda e chiede conferma prima di abbandonare modifiche non salvate negli elenchi modificabili. Nel menù e nella Drink List pubblici il testo Allergeni condivide la riga con i pulsanti compatti.
 
+La fase 4.4 aggiunge l'assegnazione facoltativa dal catalogo. La RPC `swm_save_wine_with_assignments` usa i privilegi del chiamante e richiama `swm_save_wine` nella stessa transazione delle nuove assegnazioni. Per un vino esistente, l'inserimento multiplo ignora i conflitti sulla chiave ristorante-vino e distingue le nuove righe da quelle già presenti. Le condizioni commerciali esistenti si modificano dalla scheda del ristorante.
+
+La migrazione della fase 4.4 è installata sul Supabase ufficiale, con 6/6 controlli post-installazione confermati dall'amministratore. La fase è approvata dopo il collaudo manuale e la verifica grafica.
+
 Entrambe le migrazioni sono installate sul Supabase ufficiale. L'amministratore ha confermato i 23 controlli dello schema iniziale e il collaudo operativo con Enoteca Wine Art. Il restyling Wine Boutique usa fondo avorio, schede chiare con bottiglie affiancate ai dettagli, palette del ristorante e tab persistenti. Il pannello dei filtri usa una finestra centrata su desktop e si apre dal basso su smartphone. Prima di applicare i filtri mostra il numero di vini corrispondenti in tutte le categorie.
 
 ## Schema definitivo

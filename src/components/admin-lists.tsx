@@ -3,22 +3,27 @@
 import Link from "next/link";
 import { useEffect, useState, type MouseEvent } from "react";
 import { ArrowDown, ArrowUp, Check, Copy, ExternalLink, Plus, Search, Trash2 } from "lucide-react";
-import { addAssignments, changeAssignment, saveCategoryOrder } from "../app/admin/actions";
-import { statuses, type Appellation, type Assignment, type Label, type References, type Status, type Wine } from "../lib/models";
+import { addAssignments, assignWineToRestaurants, changeAssignment, saveCategoryOrder } from "../app/admin/actions";
+import type { Appellation, Assignment, Label, References, Restaurant, RestaurantAssignment, Wine } from "../lib/models";
 import { searchable } from "../lib/search";
 import { ActionForm } from "./action-form";
 import { RegionOptions } from "./admin-fields";
 import { CategoryTabs, countByCategory, ListPagination, ListStatus, ResultCount, useAdminList } from "./admin-list-controls";
+import { AssignmentPrices as Prices, RestaurantAssignmentFields } from "./restaurant-assignment-fields";
 
 const catalogReturnKey = "swm:catalog-return";
 
-export function CatalogList({ wines, refs, appellations }: { wines: Wine[]; refs: References; appellations: Appellation[] }) {
+export function CatalogList({ wines, refs, appellations, restaurants, assignments }: {
+  wines: Wine[]; refs: References; appellations: Appellation[];
+  restaurants: Pick<Restaurant, "id" | "name">[]; assignments: RestaurantAssignment[];
+}) {
   const list = useAdminList();
   const [search, setSearch] = useState("");
   const [country, setCountry] = useState("");
   const [region, setRegion] = useState("");
   const [winery, setWinery] = useState("");
   const [appellation, setAppellation] = useState("");
+  const [assignmentWine, setAssignmentWine] = useState<string>();
   const restore = list.restore;
   useEffect(() => {
     try {
@@ -47,6 +52,13 @@ export function CatalogList({ wines, refs, appellations }: { wines: Wine[]; refs
   const wineries = new Map(refs.wineries.map(w => [w.id, w.name]));
   const categories = new Map(refs.categories.map(c => [c.id, c.name_it]));
   const regions = new Map(refs.regions.map(r => [r.id, r]));
+  const restaurantNames = new Map(restaurants.map(r => [r.id, r.name]));
+  const byWine = new Map<string, RestaurantAssignment[]>();
+  for (const row of assignments) {
+    const group = byWine.get(row.wine_id);
+    if (group) group.push(row);
+    else byWine.set(row.wine_id, [row]);
+  }
   const counts = countByCategory(wines, w => w.category_id);
   const matches = wines.filter(w => searchable(`${w.name} ${wineries.get(w.winery_id) ?? ""}`).includes(searchable(search))
     && (!list.category || w.category_id === list.category) && (!region || w.region_id === region)
@@ -92,24 +104,52 @@ export function CatalogList({ wines, refs, appellations }: { wines: Wine[]; refs
         setSearch(""); setCountry(""); setRegion(""); setWinery(""); setAppellation("");
       })}>Azzera filtri</button>
     </div>
-    {page.items.length ? <ul className="record-list">{page.items.map(w => <li key={w.id}>
+    {page.items.length ? <ul className="record-list">{page.items.map(w => {
+      const assigned = byWine.get(w.id) ?? [];
+      return <li key={w.id}>
       <Link href={`/admin/vini/${w.id}`} onClick={rememberCatalog} className="record-link">
         <span><strong>{w.name}{w.vintage ? ` · ${w.vintage}` : ""}</strong><small>{wineries.get(w.winery_id)} · {regions.get(w.region_id)?.name_it}</small></span>
         <span className="note">{categories.get(w.category_id)}</span>
       </Link>
-    </li>)}</ul> : <p>Nessun vino trovato.</p>}
+      <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
+        {assigned.length ? <details className="note min-w-0">
+          <summary>{assigned.length} {assigned.length === 1 ? "ristorante" : "ristoranti"}</summary>
+          <ul className="mt-1 break-words">{assigned.map(row => <li key={row.restaurant_id}>{restaurantNames.get(row.restaurant_id)}</li>)}</ul>
+        </details> : <span className="note">0 ristoranti</span>}
+        <button type="button" className="secondary compact" aria-expanded={assignmentWine === w.id}
+          onClick={() => { if (list.canLeave()) setAssignmentWine(assignmentWine === w.id ? undefined : w.id); }}>
+          {assignmentWine === w.id ? "Chiudi assegnazioni" : "Assegna ai ristoranti"}
+        </button>
+      </div>
+      {assignmentWine === w.id && <CatalogAssignmentForm key={list.revision} wine={w} restaurants={restaurants} existing={assigned}
+        onDirtyChange={dirty => list.reportDirty(w.id, dirty)} onPendingChange={pending => list.reportPending(w.id, pending)} />}
+    </li>;
+    })}</ul> : <p>Nessun vino trovato.</p>}
     <ListPagination {...page} />
   </section>;
 }
 
-function Prices({ suffix = "", bottle, glass, status, compact }: { suffix?: string; bottle?: number | null; glass?: number | null; status: Status; compact?: boolean }) {
-  return <div className={compact ? "assignment-fields" : "fields three"}>
-    <label>Bottiglia (€)<input name={`bottle_price${suffix}`} type="number" step="0.01" min="0" max="999999.99" defaultValue={bottle ?? ""} required /></label>
-    <label>Calice (€)<input name={`glass_price${suffix}`} type="number" step="0.01" min="0" max="999999.99" defaultValue={glass ?? ""} /></label>
-    <label>Stato<select name={`status${suffix}`} aria-label="Stato" defaultValue={status}>
-      {Object.entries(statuses).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-    </select></label>
-  </div>;
+function CatalogAssignmentForm({ wine, restaurants, existing, onDirtyChange, onPendingChange }: {
+  wine: Wine; restaurants: Pick<Restaurant, "id" | "name">[]; existing: RestaurantAssignment[];
+  onDirtyChange: (dirty: boolean) => void; onPendingChange: (pending: boolean) => void;
+}) {
+  const [selected, setSelected] = useState(0);
+  const [saved, setSaved] = useState(0);
+  return <ActionForm className="mb-3 rounded-lg border border-line p-3" onPendingChange={onPendingChange}
+    run={async form => {
+      const result = await assignWineToRestaurants(wine.id, form);
+      if ("success" in result) {
+        setSelected(0);
+        setSaved(value => value + 1);
+        onDirtyChange(false);
+      }
+      return result;
+    }}>
+    <RestaurantAssignmentFields key={saved} restaurants={restaurants} existing={existing}
+      bottle={wine.suggested_bottle_price} glass={wine.suggested_glass_price}
+      onSelectionChange={count => { setSelected(count); onDirtyChange(count > 0); }} />
+    <button className="primary compact justify-self-start" disabled={!selected}>Conferma assegnazioni</button>
+  </ActionForm>;
 }
 
 export function AssignmentBoard({ restaurantId, wines, assignments, refs, categories }: {

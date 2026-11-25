@@ -1,5 +1,5 @@
 import { records, requireAdmin } from "./supabase";
-import type { Appellation, Country, Grape, Label, References, Region, Wine, WineMetadata, Winery } from "./models";
+import type { Appellation, Country, Grape, Label, References, Region, Restaurant, RestaurantAssignment, Wine, WineMetadata, Winery } from "./models";
 
 type PageQuery = PromiseLike<{ data: unknown; error: { message: string } | null }>;
 
@@ -33,6 +33,18 @@ export async function getReferences(): Promise<References> {
 export async function getWines(): Promise<Wine[]> {
   const { db } = await requireAdmin();
   return getAdminRows<Wine>((a, b) => db.from("swm_wines").select("*").order("name").order("id").range(a, b));
+}
+
+export async function getAssignmentRestaurants(): Promise<Pick<Restaurant, "id" | "name">[]> {
+  const { db } = await requireAdmin();
+  return getAdminRows<Pick<Restaurant, "id" | "name">>((a, b) =>
+    db.from("swm_restaurants").select("id,name").order("name").order("id").range(a, b));
+}
+
+export async function getCatalogAssignments(): Promise<RestaurantAssignment[]> {
+  const { db } = await requireAdmin();
+  return getAdminRows<RestaurantAssignment>((a, b) => db.from("swm_restaurant_wines")
+    .select("restaurant_id,wine_id,bottle_price,glass_price,status").order("wine_id").order("restaurant_id").range(a, b));
 }
 
 export async function getAppellations(): Promise<Appellation[]> {

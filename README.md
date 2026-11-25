@@ -51,6 +51,8 @@ La [migrazione del catalogo vini della fase 4.2](supabase/migrations/20261125000
 
 La fase 4.3 introduce schede per categoria, ricerca, filtri e pagine da 25 risultati nelle liste amministrative. Nel Menù e nella Drink List pubblici, gli allergeni sono visualizzati in linea accanto all'etichetta. Il collaudo locale è approvato e questa fase non richiede migrazioni.
 
+La fase 4.4, approvata dopo il collaudo manuale e grafico, aggiunge **Assegna ai ristoranti** dal catalogo. Per ogni ristorante si impostano prezzo bottiglia, eventuale prezzo calice e disponibilità. Le assegnazioni esistenti restano modificabili dalla carta del ristorante. La [migrazione della RPC atomica](supabase/migrations/20261125000004_swm_save_wine_with_assignments.sql) è installata sul Supabase ufficiale, con 6/6 controlli positivi nella [verifica post-installazione](supabase/verify/20261125000004_swm_save_wine_with_assignments.sql). In caso di esito incerto durante la creazione, verificare il catalogo prima di inviare di nuovo il form.
+
 Nel catalogo, denominazione, specificazione e caratteristiche sono facoltative e indipendenti. Le specificazioni già in uso vengono suggerite dal catalogo. Per aggiungere una classificazione, selezionare **Nuova denominazione…** nella scheda del vino. In carta, i nuovi filtri valgono per la categoria selezionata.
 
 ### Configurare l'account SuPeR

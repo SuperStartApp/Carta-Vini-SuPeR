@@ -3,13 +3,15 @@
 import { useRef, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { saveReference, saveWine } from "../app/admin/actions";
-import type { ReferenceKind, References, Wine, WineGrape, WineMetadata } from "../lib/models";
+import type { ReferenceKind, References, Restaurant, Wine, WineGrape, WineMetadata } from "../lib/models";
 import { ActionForm } from "./action-form";
 import { ImageField, ReferenceFields, ReferenceTitle, RegionOptions } from "./admin-fields";
+import { RestaurantAssignmentFields } from "./restaurant-assignment-fields";
+import { useAdminList } from "./admin-list-controls";
 
 const normalize = (name: string) => name.trim().toLocaleLowerCase("it");
 
-export function WineEditor({ initial, metadata, wine, initialGrapes, initialAging, initialCharacteristics, suggestedWinery }: {
+export function WineEditor({ initial, metadata, wine, initialGrapes, initialAging, initialCharacteristics, suggestedWinery, restaurants }: {
   initial: References;
   metadata: WineMetadata;
   wine?: Wine;
@@ -17,6 +19,7 @@ export function WineEditor({ initial, metadata, wine, initialGrapes, initialAgin
   initialAging: string[];
   initialCharacteristics: string[];
   suggestedWinery?: string;
+  restaurants?: Pick<Restaurant, "id" | "name">[];
 }) {
   const [refs, setRefs] = useState(initial);
   const winery = initial.wineries.find(w => w.id === (wine?.winery_id ?? suggestedWinery));
@@ -27,6 +30,9 @@ export function WineEditor({ initial, metadata, wine, initialGrapes, initialAgin
   const [grapes, setGrapes] = useState(initialGrapes);
   const [aging, setAging] = useState(initialAging);
   const [quick, setQuick] = useState<ReferenceKind>();
+  const [bottle, setBottle] = useState("");
+  const [glass, setGlass] = useState("");
+  const draft = useAdminList();
   const dialog = useRef<HTMLDialogElement>(null);
   const wineryId = refs.wineries.find(w => normalize(w.name) === normalize(wineryText))?.id ?? "";
   const quickButton = (kind: ReferenceKind, label: string) =>
@@ -36,7 +42,7 @@ export function WineEditor({ initial, metadata, wine, initialGrapes, initialAgin
     }}><Plus size={15} />{label}</button>;
 
   return <>
-    <ActionForm run={saveWine} className="panel">
+    <ActionForm run={saveWine} className="panel" onPendingChange={pending => draft.reportPending("wine", pending)}>
       {wine && <input type="hidden" name="id" value={wine.id} />}
       <div className="fields">
         <label>Nome vino<input name="name" defaultValue={wine?.name} required /></label>
@@ -133,13 +139,22 @@ export function WineEditor({ initial, metadata, wine, initialGrapes, initialAgin
               ["suggested_bottle_price", "Prezzo indicativo bottiglia (€)", 0, 999999.99, 0.01],
               ["suggested_glass_price", "Prezzo indicativo calice (€)", 0, 999999.99, 0.01],
             ] as const).map(([key, label, min, max, step]) =>
-              <label key={key}>{label}<input type="number" name={key} min={min} max={max} step={step} defaultValue={wine?.[key] ?? ""} /></label>)}
+              <label key={key}>{label}<input type="number" name={key} min={min} max={max} step={step} defaultValue={wine?.[key] ?? ""}
+                onChange={key === "suggested_bottle_price" ? event => setBottle(event.target.value)
+                  : key === "suggested_glass_price" ? event => setGlass(event.target.value) : undefined} /></label>)}
           </div>
           <div className="fields">{([
             ["nose_it", "Olfatto IT"], ["nose_en", "Olfatto EN"], ["palate_it", "Gusto IT"], ["palate_en", "Gusto EN"],
           ] as const).map(([key, label]) => <label key={key}>{label}<textarea name={key} rows={2} defaultValue={wine?.[key] ?? ""} /></label>)}</div>
         </div>
       </details>
+      {restaurants && <details className="details" onInvalidCapture={event => { event.currentTarget.open = true; }}>
+        <summary>Assegna ai ristoranti</summary>
+        <div className="mt-3">
+          <RestaurantAssignmentFields restaurants={restaurants} bottle={bottle} glass={glass}
+            onSelectionChange={count => draft.reportDirty("wine", count > 0)} />
+        </div>
+      </details>}
       <button className="primary justify-self-start">{wine ? "Salva modifiche" : "Salva vino"}</button>
     </ActionForm>
     <dialog ref={dialog} className="panel m-auto w-[min(92vw,34rem)] backdrop:bg-black/30"

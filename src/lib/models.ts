@@ -28,6 +28,7 @@ export type Status = keyof typeof statuses;
 export type Assignment = {
   wine_id: string; bottle_price: number; glass_price: number | null; status: Status;
 };
+export type RestaurantAssignment = Assignment & { restaurant_id: string };
 
 export const referenceTables = {
   wineries: "swm_wineries", regions: "swm_regions", countries: "swm_countries",

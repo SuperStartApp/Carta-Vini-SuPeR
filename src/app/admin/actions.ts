@@ -55,7 +55,7 @@ function check(error: { code?: string } | null) {
   if (error.code === "23503") throw new Error("Uno dei riferimenti selezionati non è più valido.");
   if (error.code === "PGRST202") throw new Error("Funzione di salvataggio non disponibile. Verifica la migrazione della fase 2.");
   if (error.code === "42501") throw new Error("Operazione non autorizzata o scheda non più disponibile.");
-  if (error.code === "23514" || error.code === "22P02") throw new Error("Alcuni valori non rispettano il formato richiesto.");
+  if (error.code === "23514" || error.code === "22P02" || error.code === "22023") throw new Error("Alcuni valori non rispettano il formato richiesto.");
   throw new Error("Errore durante il salvataggio. Riprova.");
 }
 
@@ -89,6 +89,7 @@ export async function saveReference(kind: ReferenceKind, form: FormData) {
 export async function saveWine(form: FormData) {
   const { db } = await requireAdmin();
   let savedId: string;
+  let assignedCount = 0;
   try {
     const id = optional(form, "id");
     const appellation = optional(form, "appellation_id");
@@ -116,14 +117,26 @@ export async function saveWine(form: FormData) {
     const grapes = values(form, "grape_id").map(grape_id => ({
       grape_id, percentage: amount(form, `grape_${grape_id}`, "Percentuale vitigno", 0.01, 100),
     }));
-    const { data, error } = await db.rpc("swm_save_wine", {
+    const args = {
       wine_data: wine, grape_data: grapes, aging_ids: values(form, "aging_id"),
-    });
+    };
+    const rows = restaurantAssignments(form);
+    if (rows.length && id) throw new Error("Usa Assegna ai ristoranti per un vino già a catalogo.");
+    const { data, error, status } = await (rows.length
+      ? db.rpc("swm_save_wine_with_assignments", { ...args, assignments: rows }).retry(false)
+      : db.rpc("swm_save_wine", args).retry(false));
+    if (error && !id && (status === 0 || status >= 500)) {
+      throw new Error("Esito del salvataggio incerto. Verifica se il vino è già nel catalogo prima di riprovare.");
+    }
+    if (error?.code === "PGRST202" && rows.length) throw new Error("Assegnazione non disponibile. Verifica la migrazione della Fase 4.4.");
     check(error);
-    savedId = String(data);
+    if (rows.length) {
+      savedId = String(data.wine_id);
+      assignedCount = Number(data.assigned_count);
+    } else savedId = String(data);
   } catch (error) { return message(error); }
   revalidatePath("/admin", "layout");
-  redirect(`/admin/vini/${savedId}?salvato=1`);
+  redirect(`/admin/vini/${savedId}?salvato=1${assignedCount ? `&assegnati=${assignedCount}` : ""}`);
 }
 
 export async function saveRestaurant(form: FormData) {
@@ -153,15 +166,37 @@ export async function saveRestaurant(form: FormData) {
   redirect(`/admin/ristoranti/${savedId}`);
 }
 
-function assignment(form: FormData, suffix = "") {
+function assignment(form: FormData, suffix = "", bottleLabel = "Inserisci il prezzo bottiglia per ogni vino selezionato.") {
   const bottle = amount(form, `bottle_price${suffix}`, "Prezzo bottiglia");
-  if (bottle === null) throw new Error("Inserisci il prezzo bottiglia per ogni vino selezionato.");
+  if (bottle === null) throw new Error(bottleLabel);
   const status = value(form, `status${suffix}`);
   if (!Object.hasOwn(statuses, status)) throw new Error("Seleziona uno stato valido.");
   return {
     bottle_price: bottle, glass_price: amount(form, `glass_price${suffix}`, "Prezzo calice"),
     status: status as Status,
   };
+}
+
+function restaurantAssignments(form: FormData) {
+  return values(form, "restaurant_id").sort().map(restaurant_id => ({
+    restaurant_id,
+    ...assignment(form, `_${restaurant_id}`, "Inserisci il prezzo bottiglia per ogni ristorante selezionato."),
+  }));
+}
+
+export async function assignWineToRestaurants(wineId: string, form: FormData) {
+  const { db } = await requireAdmin();
+  try {
+    const rows = restaurantAssignments(form).map(row => ({ ...row, wine_id: wineId }));
+    if (!rows.length) throw new Error("Seleziona almeno un ristorante.");
+    const { count, data, error } = await db.from("swm_restaurant_wines")
+      .upsert(rows, { onConflict: "restaurant_id,wine_id", ignoreDuplicates: true, count: "exact" })
+      .select("restaurant_id");
+    check(error);
+    revalidatePath("/admin", "layout");
+    const created = count ?? data?.length ?? 0;
+    return { success: `Nuove assegnazioni: ${created}. Già presenti: ${rows.length - created}.` };
+  } catch (error) { return message(error); }
 }
 
 export async function addAssignments(restaurantId: string, form: FormData) {

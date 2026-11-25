@@ -18,6 +18,7 @@ export function ActionForm({ run, children, className, onDirtyChange, onPendingC
 }) {
   const [pending, start] = useTransition();
   const [result, setResult] = useState<ActionResult>();
+  const submitting = useRef(false);
   const initial = useRef("");
   const attach = useCallback((form: HTMLFormElement | null) => {
     if (form) initial.current = snapshot(form);
@@ -26,10 +27,12 @@ export function ActionForm({ run, children, className, onDirtyChange, onPendingC
     onChange={onDirtyChange ? event => onDirtyChange(snapshot(event.currentTarget) !== initial.current) : undefined}
     onSubmit={(event) => {
     event.preventDefault();
+    if (submitting.current) return;
     const data = new FormData(event.currentTarget, (event.nativeEvent as SubmitEvent).submitter);
     const submitted = onDirtyChange ? snapshot(event.currentTarget) : "";
     setResult(undefined);
     onPendingChange?.(true);
+    submitting.current = true;
     start(async () => {
       try {
         const outcome = await run(data);
@@ -39,6 +42,7 @@ export function ActionForm({ run, children, className, onDirtyChange, onPendingC
         }
         setResult(outcome ?? undefined);
       } finally {
+        submitting.current = false;
         onPendingChange?.(false);
       }
     });

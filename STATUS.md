@@ -1,5 +1,12 @@
 # Stato del progetto
 
+## Fase 4.4 · 25 novembre 2026
+
+- Nuova assegnazione multiristorante dal catalogo. Preparata la migrazione della sola RPC atomica con verifica strutturale in sola lettura.
+- Passati lint, typecheck e build. Su PostgreSQL isolato, 6/6 controlli strutturali e prove di rollback, autorizzazioni, ordinamento e visibilità pubblica. In Chrome verificati creazione senza assegnazioni, singola e multipla, invii concorrenti da due schede, gestione dell'esito incerto, flusso dalla scheda del ristorante e responsive a 320, 390 e 1280 px.
+- L'amministratore ha confermato l'installazione della migrazione sul Supabase ufficiale con 6/6 controlli positivi, il collaudo manuale e grafico e l'approvazione del rilascio su `main`.
+- Accesso all'ambiente isolato confermato con le credenziali dimostrative. Il precedente 404 di Ristorante Virgilio Campo de' Fiori era dovuto alla mancata attivazione del ristorante. Per un locale pubblicato senza contenuti la pagina mostra il messaggio di carta in aggiornamento.
+
 ## Fase 4.3 · 25 novembre 2026
 
 - Catalogo, Carta vini, Menù e Drink List amministrativi organizzati in schede per categoria, con contatori, ricerca, filtri e pagine da 25. Conservazione della vista durante i salvataggi e al ritorno dalla scheda del prodotto.
