@@ -49,6 +49,8 @@ La [migrazione della fase 4.1](supabase/migrations/20261125000002_swm_drink_list
 
 La [migrazione del catalogo vini della fase 4.2](supabase/migrations/20261125000003_swm_wine_appellations.sql) è installata sul Supabase ufficiale. L'amministratore ha confermato gli 8 controlli post-installazione. La migrazione aggiunge anagrafiche e associazioni senza valorizzare le schede esistenti.
 
+La fase 4.3 introduce schede per categoria, ricerca, filtri e pagine da 25 risultati nelle liste amministrative. Nel Menù e nella Drink List pubblici, gli allergeni sono visualizzati in linea accanto all'etichetta. Il collaudo locale è approvato e questa fase non richiede migrazioni.
+
 Nel catalogo, denominazione, specificazione e caratteristiche sono facoltative e indipendenti. Le specificazioni già in uso vengono suggerite dal catalogo. Per aggiungere una classificazione, selezionare **Nuova denominazione…** nella scheda del vino. In carta, i nuovi filtri valgono per la categoria selezionata.
 
 ### Configurare l'account SuPeR

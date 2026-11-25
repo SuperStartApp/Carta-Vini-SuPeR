@@ -109,14 +109,15 @@ export function PublicDishes({ categories, wines = [], lang, money, onWine, kind
           return <article className="dish-card" key={dish.id} id={`${kind === "cocktail" ? "cocktail" : "dish"}-${dish.id}`} tabIndex={-1}>
             <header><h3>{text(dish, lang)}</h3><strong>{money.format(dish.price)}</strong></header>
             {description && <p className="dish-description">{description}</p>}
-            {dish.allergens.length > 0 && <section className="mt-3" aria-label={t.allergens}>
-              <h4>{t.allergens}</h4>
-              <div className="dish-allergens">{dish.allergens.map(allergen => <button key={allergen.id} type="button"
+            {dish.allergens.length > 0 && <section className="dish-allergens" aria-label={t.allergens}>
+              <span className="dish-allergen-label">{t.allergens}:</span>
+              {dish.allergens.map(allergen => <button key={allergen.id} type="button"
                 aria-label={`${allergen.id}. ${text(allergen, lang)}`}
                 aria-haspopup="dialog" onClick={event => open([allergen], false, event.currentTarget)}>
-                <AllergenIcon id={allergen.id} />
-                <span aria-hidden="true">{allergen.id}</span>
-              </button>)}</div>
+                <span className="dish-allergen-badge" aria-hidden="true">
+                  <AllergenIcon id={allergen.id} size={13} />{allergen.id}
+                </span>
+              </button>)}
             </section>}
             {onWine && pairs.length > 0 && <section className="dish-pairings">
               <h4 className="flex items-center gap-1.5"><Wine size={15} aria-hidden="true" />{t.pairing}</h4>

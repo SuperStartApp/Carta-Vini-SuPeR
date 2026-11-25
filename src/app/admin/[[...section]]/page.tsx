@@ -6,7 +6,7 @@ import { AssignmentBoard, CatalogList, PublicLink } from "../../../components/ad
 import { WineEditor } from "../../../components/wine-editor";
 import { RestaurantMenu } from "../restaurant-menu";
 import { publicRestaurantUrl } from "../../../lib/public-restaurant-url";
-import { getReferences, getWineMetadata, getWines } from "../../../lib/data";
+import { getAdminRows, getAppellations, getReferences, getWineMetadata, getWines } from "../../../lib/data";
 import { referenceTitles, type Assignment, type Label, type ReferenceKind, type Restaurant, type Wine, type WineGrape } from "../../../lib/models";
 import { records, requireAdmin } from "../../../lib/supabase";
 
@@ -44,8 +44,8 @@ async function Dashboard() {
 
 async function Wines({ id, query }: { id?: string; query: Query }) {
   if (!id) {
-    const [wines, refs] = await Promise.all([getWines(), getReferences()]);
-    return <><Heading title="Catalogo vini"><Add href="/admin/vini/nuovo">Nuovo vino</Add></Heading><CatalogList wines={wines} refs={refs} /></>;
+    const [wines, refs, appellations] = await Promise.all([getWines(), getReferences(), getAppellations()]);
+    return <><Heading title="Catalogo vini" /><CatalogList wines={wines} refs={refs} appellations={appellations} /></>;
   }
   const { db } = await requireAdmin();
   const [refs, metadata] = await Promise.all([getReferences(), getWineMetadata()]);
@@ -167,12 +167,13 @@ async function Restaurants({ id, query }: { id?: string; query: Query }) {
   if (tab === "cocktail") return <RestaurantCard row={row} tab={tab}><RestaurantMenu id={id} kind="cocktail" /></RestaurantCard>;
   if (tab === "link") return <RestaurantCard row={row} tab={tab}><PublicLink url={publicRestaurantUrl(row.slug)} published={row.is_published} /></RestaurantCard>;
   if (tab === "impostazioni") return <RestaurantCard row={row} tab={tab}><section className="panel"><RestaurantForm restaurant={row} /></section></RestaurantCard>;
-  const [wines, refs, assignmentResult, orderResult] = await Promise.all([
-    getWines(), getReferences(), db.from("swm_restaurant_wines").select("wine_id,bottle_price,glass_price,status").eq("restaurant_id", id),
-    db.from("swm_restaurant_wine_categories").select("category_id,position").eq("restaurant_id", id),
+  const [wines, refs, assignments, orderRows] = await Promise.all([
+    getWines(), getReferences(), getAdminRows<Assignment>((a, b) => db.from("swm_restaurant_wines")
+      .select("wine_id,bottle_price,glass_price,status").eq("restaurant_id", id).order("wine_id").range(a, b)),
+    getAdminRows<{ category_id: string; position: number }>((a, b) => db.from("swm_restaurant_wine_categories")
+      .select("category_id,position").eq("restaurant_id", id).order("category_id").range(a, b)),
   ]);
-  const assignments = records<Assignment>(assignmentResult);
-  const order = new Map(records<{ category_id: string; position: number }>(orderResult).map(entry => [entry.category_id, entry.position]));
+  const order = new Map(orderRows.map(entry => [entry.category_id, entry.position]));
   const wineById = new Map(wines.map(w => [w.id, w]));
   const used = new Set(assignments.map(a => wineById.get(a.wine_id)?.category_id));
   const sortCategories = (a: Label, b: Label) => (order.get(a.id) ?? Infinity) - (order.get(b.id) ?? Infinity) || a.name_it.localeCompare(b.name_it, "it");

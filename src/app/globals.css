@@ -56,6 +56,10 @@ body {
   .tabs { @apply flex gap-2 overflow-x-auto pb-2; }
   .tabs :is(a, button) { @apply min-h-10 shrink-0 rounded-full border border-line px-4 py-2 text-sm font-semibold whitespace-nowrap; }
   .tabs :is([aria-current="page"], [aria-pressed="true"]) { @apply border-bordeaux bg-bordeaux text-white; }
+  .assignment-fields { @apply grid min-w-0 flex-1 basis-72 grid-cols-2 gap-2 sm:grid-cols-3; }
+  .assignment-fields label { @apply min-w-0 gap-1; }
+  .assignment-fields label:last-child { @apply col-span-2 sm:col-span-1; }
+  .assignment-fields :is(input, select) { @apply !min-h-9 !px-1.5 !py-1 sm:!px-2.5; }
 
   .public-page {
     --boutique-paper: #faf7f2;
@@ -164,20 +168,24 @@ body {
   .dish-warning { @apply mt-3 rounded-lg px-3 py-2 text-sm leading-snug text-neutral-700; background: var(--accent-wash); }
   .dish-category-title { @apply mb-2 font-serif text-xl; color: var(--accent-ink); }
   .dish-card, .wine-row { scroll-margin-top: 4.5rem; }
-  .dish-card { @apply rounded-xl border bg-white p-3 sm:p-5; border-color: var(--accent-line); }
+  .dish-card { @apply rounded-xl border bg-white px-3 py-2.5 sm:px-5 sm:py-4; border-color: var(--accent-line); }
   .dish-card header { @apply flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1; color: var(--accent-ink); }
   .dish-card h3 { @apply min-w-0 font-serif text-2xl leading-tight wrap-break-word; }
   .dish-card header strong { @apply whitespace-nowrap tabular-nums; }
   .dish-card h4 { @apply mb-1.5 text-sm font-semibold; color: var(--accent-ink); }
-  .dish-description { @apply mt-2 whitespace-pre-line text-neutral-700; }
-  .dish-allergens { @apply flex flex-wrap gap-2; }
+  .dish-description { @apply mt-1.5 whitespace-pre-line text-neutral-700; }
+  .dish-allergens { @apply flex flex-wrap items-center gap-x-1; }
+  .dish-allergen-label { @apply mr-1 text-sm font-semibold; color: var(--accent-ink); }
   .dish-allergens button {
-    @apply inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center gap-1 rounded-full border px-2 text-sm font-semibold tabular-nums;
+    @apply inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full;
+  }
+  .dish-allergen-badge {
+    @apply inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs font-semibold tabular-nums;
     border-color: var(--accent-line);
     background: var(--accent-wash);
     color: var(--accent-ink);
   }
-  .dish-pairings { @apply mt-3 border-t pt-3; border-color: var(--accent-line); }
+  .dish-pairings { @apply mt-2 border-t pt-2; border-color: var(--accent-line); }
   .dish-pairings ul { @apply grid gap-2 sm:grid-cols-2; }
   .dish-pairings button { @apply flex h-full w-full items-center gap-2 rounded-lg p-2 text-left text-sm; background: var(--accent-wash); color: var(--accent-ink); }
   .allergen-guide { @apply grid gap-3 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6; }

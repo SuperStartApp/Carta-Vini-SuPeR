@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Check, Copy, Plus, Trash2, X } from "lucide-react";
 import { saveDish, changeDish, saveMenuCategory, initCocktailCategories } from "../app/admin/menu-actions";
 import type { Allergen, Dish, ListKind, MenuCategory, PairingOption } from "../lib/menu";
@@ -8,6 +8,7 @@ import { statuses } from "../lib/models";
 import { searchable } from "../lib/search";
 import { ActionForm } from "./action-form";
 import { AllergenIcon } from "./allergen-icon";
+import { CategoryTabs, countByCategory, ListPagination, ListStatus, ResultCount, useAdminList } from "./admin-list-controls";
 
 const money = new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" });
 
@@ -55,16 +56,17 @@ function PairingPicker({ options, selected, onChange }: {
   </>;
 }
 
-function DishEditor({ restaurantId, kind, dish, categories, allergens, options, onSaved, onCancel }: {
+function DishEditor({ restaurantId, kind, dish, categories, allergens, options, initialCategory, onSaved, onCancel, onDirtyChange, onPendingChange }: {
   restaurantId: string; kind: ListKind; dish?: Dish; categories: MenuCategory[]; allergens: Allergen[];
-  options: PairingOption[]; onSaved: () => void; onCancel: () => void;
+  options: PairingOption[]; initialCategory: string; onSaved: () => void; onCancel: () => void;
+  onDirtyChange: (dirty: boolean) => void; onPendingChange: (pending: boolean) => void;
 }) {
   const [allergenIds, setAllergens] = useState(dish?.allergen_ids ?? []);
   const [wineIds, setWines] = useState(dish?.wine_ids ?? []);
   const drink = kind === "cocktail";
   return <section className="panel">
     <h2 className="mb-3">{drink ? (dish ? "Modifica bevanda" : "Nuova bevanda") : (dish?.name_it ?? "Nuovo piatto")}</h2>
-    <ActionForm run={async form => {
+    <ActionForm onDirtyChange={onDirtyChange} onPendingChange={onPendingChange} run={async form => {
       const result = await saveDish(restaurantId, dish?.id ?? null, form, kind);
       if ("success" in result) onSaved();
       return result;
@@ -72,7 +74,7 @@ function DishEditor({ restaurantId, kind, dish, categories, allergens, options, 
       <fieldset className="grid gap-3">
         <legend className="mb-2 font-semibold">{drink ? "Informazioni della bevanda" : "Informazioni del piatto"}</legend>
         <div className="fields">
-          <label>Categoria<select name="category_id" required defaultValue={dish?.category_id ?? categories[0]?.id ?? ""}>
+          <label>Categoria<select name="category_id" required defaultValue={dish?.category_id ?? (initialCategory || categories[0]?.id || "")}>
             {!categories.length && <option value="">Crea prima una categoria</option>}
             {categories.map(category => <option key={category.id} value={category.id}>{category.name_it}</option>)}
           </select></label>
@@ -103,7 +105,10 @@ function DishEditor({ restaurantId, kind, dish, categories, allergens, options, 
       </fieldset>
       {kind === "menu" && <fieldset className="grid gap-2 border-t border-line pt-3">
         <legend className="font-semibold">Abbinamenti consigliati</legend>
-        <PairingPicker options={options} selected={wineIds} onChange={setWines} />
+        <PairingPicker options={options} selected={wineIds} onChange={ids => {
+          setWines(ids);
+          onDirtyChange(true);
+        }} />
       </fieldset>}
       <div className="flex flex-wrap gap-2">
         <button className="primary" disabled={!categories.length}>{drink ? "Salva bevanda" : "Salva piatto"}</button>
@@ -139,15 +144,38 @@ export function MenuBoard({ restaurantId, kind, dishes, categories, allergens, o
   const [editor, setEditor] = useState<string>();
   const [notice, setNotice] = useState("");
   const [query, setQuery] = useState("");
-  const [categoryId, setCategoryId] = useState("");
   const [status, setStatus] = useState("");
+  const list = useAdminList();
+  const listScroll = useRef(0);
   const editing = dishes.find(dish => dish.id === editor);
   const drink = kind === "cocktail";
   const nextPosition = Math.min(2147483647, Math.max(-10, ...categories.map(category => category.position)) + 10);
+  const counts = countByCategory(dishes, dish => dish.category_id);
+  const categoryOrder = new Map(categories.map((category, index) => [category.id, index]));
+  const matches = dishes.filter(dish => (!list.category || dish.category_id === list.category)
+    && (!status || dish.status === status) && searchable(`${dish.name_it} ${dish.name_en ?? ""}`).includes(searchable(query)))
+    .sort((a, b) => (categoryOrder.get(a.category_id) ?? Infinity) - (categoryOrder.get(b.category_id) ?? Infinity));
+  const page = list.paginate(matches);
+
+  function openEditor(id: string) {
+    if (!list.canLeave()) return;
+    listScroll.current = window.scrollY;
+    setNotice("");
+    setEditor(id);
+    window.scrollTo(0, 0);
+  }
+
+  function closeEditor() {
+    setEditor(undefined);
+    requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, listScroll.current)));
+  }
 
   if (editor === "new" || editing) return <DishEditor key={editor} restaurantId={restaurantId} kind={kind} dish={editing}
-    categories={categories} allergens={allergens} options={options} onCancel={() => setEditor(undefined)}
-    onSaved={() => { setEditor(undefined); setNotice(drink ? "Bevanda salvata." : "Piatto salvato."); }} />;
+    categories={categories} allergens={allergens} options={options} initialCategory={list.category}
+    onDirtyChange={changed => list.reportDirty("editor", changed)}
+    onPendingChange={pending => list.reportPending("editor", pending)}
+    onCancel={() => { if (list.canLeave()) closeEditor(); }}
+    onSaved={() => { closeEditor(); setNotice(drink ? "Bevanda salvata." : "Piatto salvato."); }} />;
 
   return <div className="grid gap-4">
     {drink && !categories.length && <section className="panel">
@@ -166,28 +194,32 @@ export function MenuBoard({ restaurantId, kind, dishes, categories, allergens, o
       </li>)}</ul>
       <div className="mt-3"><CategoryForm restaurantId={restaurantId} kind={kind} initialPosition={nextPosition} /></div>
     </details>
-    <section className="panel grid gap-4">
+    <section className="panel grid min-w-0 gap-4">
       <header className="flex flex-wrap items-center justify-between gap-2">
         <h2>{drink ? "Bevande del ristorante" : "Piatti del ristorante"}</h2>
-        <button className="primary compact" type="button" onClick={() => setEditor("new")} disabled={!categories.length}><Plus size={16} /> {drink ? "Nuova bevanda" : "Nuovo piatto"}</button>
+        <button className="primary compact" type="button" onClick={() => openEditor("new")} disabled={!categories.length}><Plus size={16} /> {drink ? "Nuova bevanda" : "Nuovo piatto"}</button>
       </header>
       {notice && <p className="note" role="status">{notice}</p>}
-      <div className="fields three">
-        <label>{drink ? "Cerca bevanda" : "Cerca piatto"}<input type="search" value={query} onChange={event => setQuery(event.target.value)} /></label>
-        <label>Categoria<select value={categoryId} onChange={event => setCategoryId(event.target.value)}>
-          <option value="">Tutte</option>{categories.map(category => <option key={category.id} value={category.id}>{category.name_it}</option>)}
-        </select></label>
-        <label>Stato<select value={status} onChange={event => setStatus(event.target.value)}><option value="">Tutti</option><StatusOptions /></select></label>
+      <CategoryTabs categories={categories} selected={list.category} counts={counts} total={dishes.length} onSelect={list.selectCategory} />
+      <div className="fields">
+        <label>{drink ? "Cerca bevanda" : "Cerca piatto"}<input type="search" value={query}
+          onChange={event => list.change(() => setQuery(event.target.value))} /></label>
+        <ListStatus value={status} onChange={value => list.change(() => setStatus(value))} />
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <ResultCount start={page.start} count={page.items.length} total={page.total} />
+        <button type="button" className="secondary compact" onClick={() => list.reset(() => { setQuery(""); setStatus(""); })}>Azzera filtri</button>
       </div>
       {categories.map(category => {
-        const group = dishes.filter(dish => dish.category_id === category.id && (!categoryId || categoryId === category.id)
-          && (!status || dish.status === status) && searchable(`${dish.name_it} ${dish.name_en ?? ""}`).includes(searchable(query)));
+        const group = page.items.filter(dish => dish.category_id === category.id);
         if (!group.length) return null;
         return <section key={category.id} className="grid gap-2">
           <h3 className="text-sm font-semibold text-bordeaux">{category.name_it}</h3>
-          {group.map(dish => <article className="rounded-xl border border-line p-3" key={dish.id}>
-            <button className="mb-2 font-semibold hover:underline" type="button" onClick={() => setEditor(dish.id)}>{dish.name_it}</button>
-            <ActionForm run={form => {
+          {group.map(dish => <article className="rounded-xl border border-line p-3" key={`${dish.id}:${list.revision}`}>
+            <button className="mb-2 font-semibold hover:underline" type="button" onClick={() => openEditor(dish.id)}>{dish.name_it}</button>
+            <ActionForm onDirtyChange={changed => list.reportDirty(dish.id, changed)}
+              onPendingChange={pending => list.reportPending(dish.id, pending)}
+              savesDraft={form => form.get("operation") !== "duplicate"} run={form => {
               if (form.get("operation") === "delete" && !window.confirm(`Eliminare «${dish.name_it}»?`)) return Promise.resolve();
               return changeDish(restaurantId, dish.id, form, kind);
             }}>
@@ -198,7 +230,7 @@ export function MenuBoard({ restaurantId, kind, dishes, categories, allergens, o
               </div>
               <div className="flex flex-wrap gap-2">
                 <button className="secondary compact">Aggiorna</button>
-                <button type="button" className="secondary compact" onClick={() => setEditor(dish.id)}>{drink ? "Modifica bevanda" : "Apri scheda"}</button>
+                <button type="button" className="secondary compact" onClick={() => openEditor(dish.id)}>{drink ? "Modifica bevanda" : "Apri scheda"}</button>
                 <button formNoValidate className="secondary compact" name="operation" value="duplicate"><Copy size={14} /> {drink ? "Duplica bevanda" : "Duplica"}</button>
                 <button formNoValidate className="secondary compact" name="operation" value="delete"><Trash2 size={14} /> {drink ? "Elimina bevanda" : "Elimina"}</button>
               </div>
@@ -206,8 +238,8 @@ export function MenuBoard({ restaurantId, kind, dishes, categories, allergens, o
           </article>)}
         </section>;
       })}
-      {!dishes.some(dish => (!categoryId || dish.category_id === categoryId) && (!status || dish.status === status)
-        && searchable(`${dish.name_it} ${dish.name_en ?? ""}`).includes(searchable(query))) && <p className="note">{drink ? "Nessuna bevanda da mostrare." : "Nessun piatto da mostrare."}</p>}
+      {!page.total && <p className="note">{drink ? "Nessuna bevanda da mostrare." : "Nessun piatto da mostrare."}</p>}
+      <ListPagination {...page} />
     </section>
   </div>;
 }

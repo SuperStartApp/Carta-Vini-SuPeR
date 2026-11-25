@@ -1,45 +1,109 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { ArrowDown, ArrowUp, Check, Copy, ExternalLink, Plus, Search, Trash2 } from "lucide-react";
 import { addAssignments, changeAssignment, saveCategoryOrder } from "../app/admin/actions";
-import { statuses, type Assignment, type Label, type References, type Status, type Wine } from "../lib/models";
+import { statuses, type Appellation, type Assignment, type Label, type References, type Status, type Wine } from "../lib/models";
 import { searchable } from "../lib/search";
 import { ActionForm } from "./action-form";
 import { RegionOptions } from "./admin-fields";
+import { CategoryTabs, countByCategory, ListPagination, ListStatus, ResultCount, useAdminList } from "./admin-list-controls";
 
-export function CatalogList({ wines, refs }: { wines: Wine[]; refs: References }) {
+const catalogReturnKey = "swm:catalog-return";
+
+export function CatalogList({ wines, refs, appellations }: { wines: Wine[]; refs: References; appellations: Appellation[] }) {
+  const list = useAdminList();
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
+  const [country, setCountry] = useState("");
   const [region, setRegion] = useState("");
+  const [winery, setWinery] = useState("");
+  const [appellation, setAppellation] = useState("");
+  const restore = list.restore;
+  useEffect(() => {
+    try {
+      const position = sessionStorage.getItem(catalogReturnKey);
+      if (!position) return;
+      const previous = JSON.parse(position) as {
+        category: string; page: number; scroll: number; search: string;
+        country: string; region: string; winery: string; appellation: string;
+      };
+      let scrollFrame = 0;
+      const restoreFrame = requestAnimationFrame(() => {
+        sessionStorage.removeItem(catalogReturnKey);
+        setSearch(previous.search);
+        setCountry(previous.country);
+        setRegion(previous.region);
+        setWinery(previous.winery);
+        setAppellation(previous.appellation);
+        restore(previous.category, previous.page);
+        scrollFrame = requestAnimationFrame(() => window.scrollTo(0, previous.scroll));
+      });
+      return () => { cancelAnimationFrame(restoreFrame); cancelAnimationFrame(scrollFrame); };
+    } catch {
+      // Il catalogo resta utilizzabile anche con storage disabilitato.
+    }
+  }, [restore]);
   const wineries = new Map(refs.wineries.map(w => [w.id, w.name]));
   const categories = new Map(refs.categories.map(c => [c.id, c.name_it]));
-  const regions = new Map(refs.regions.map(r => [r.id, r.name_it]));
+  const regions = new Map(refs.regions.map(r => [r.id, r]));
+  const counts = countByCategory(wines, w => w.category_id);
   const matches = wines.filter(w => searchable(`${w.name} ${wineries.get(w.winery_id) ?? ""}`).includes(searchable(search))
-    && (!category || w.category_id === category) && (!region || w.region_id === region));
-  return <section className="panel">
-    <div className="fields three mb-5">
-      <label>Cerca<input type="search" value={search} placeholder="Nome vino o cantina" onChange={e => setSearch(e.target.value)} /></label>
-      <label>Categoria<select aria-label="Categoria" value={category} onChange={e => setCategory(e.target.value)}>
-        <option value="">Tutte</option>{refs.categories.map(c => <option key={c.id} value={c.id}>{c.name_it}</option>)}
+    && (!list.category || w.category_id === list.category) && (!region || w.region_id === region)
+    && (!country || regions.get(w.region_id)?.country_id === country)
+    && (!winery || w.winery_id === winery) && (!appellation || w.appellation_id === appellation));
+  const page = list.paginate(matches);
+  function rememberCatalog(event: MouseEvent<HTMLAnchorElement>) {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    try {
+      sessionStorage.setItem(catalogReturnKey, JSON.stringify({
+        category: list.category, page: page.current, scroll: window.scrollY, search, country, region, winery, appellation,
+      }));
+    } catch {
+      // La navigazione rimane disponibile.
+    }
+  }
+  return <section className="panel grid min-w-0 gap-3">
+    <Link href="/admin/vini/nuovo" onClick={rememberCatalog} className="primary justify-self-start"><Plus size={16} /> Nuovo vino</Link>
+    <CategoryTabs categories={refs.categories.filter(c => counts.has(c.id))} selected={list.category}
+      counts={counts} total={wines.length} onSelect={list.selectCategory} />
+    <div className="fields three">
+      <label>Cerca<input type="search" value={search} placeholder="Nome vino o cantina" onChange={e => list.change(() => setSearch(e.target.value))} /></label>
+      <label>Nazione<select aria-label="Nazione" value={country} onChange={e => list.change(() => {
+        const value = e.target.value;
+        setCountry(value);
+        if (value && region && regions.get(region)?.country_id !== value) setRegion("");
+      })}>
+        <option value="">Tutte</option>{refs.countries.map(c => <option key={c.id} value={c.id}>{c.name_it}</option>)}
       </select></label>
-      <label>Regione<select aria-label="Regione" value={region} onChange={e => setRegion(e.target.value)}>
-        <option value="">Tutte</option><RegionOptions refs={refs} />
+      <label>Regione<select aria-label="Regione" value={region} onChange={e => list.change(() => setRegion(e.target.value))}>
+        <option value="">Tutte</option><RegionOptions refs={country ? { ...refs, regions: refs.regions.filter(r => r.country_id === country) } : refs} />
+      </select></label>
+      <label>Cantina<select aria-label="Cantina" value={winery} onChange={e => list.change(() => setWinery(e.target.value))}>
+        <option value="">Tutte</option>{refs.wineries.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+      </select></label>
+      <label>Denominazione<select aria-label="Denominazione" value={appellation} onChange={e => list.change(() => setAppellation(e.target.value))}>
+        <option value="">Tutte</option>{appellations.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
       </select></label>
     </div>
-    <p className="note mb-2">{matches.length} {matches.length === 1 ? "vino" : "vini"}</p>
-    {matches.length ? <ul className="record-list">{matches.map(w => <li key={w.id}>
-      <Link href={`/admin/vini/${w.id}`} className="record-link">
-        <span><strong>{w.name}{w.vintage ? ` · ${w.vintage}` : ""}</strong><small>{wineries.get(w.winery_id)} · {regions.get(w.region_id)}</small></span>
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <ResultCount start={page.start} count={page.items.length} total={page.total} />
+      <button type="button" className="secondary compact" onClick={() => list.reset(() => {
+        setSearch(""); setCountry(""); setRegion(""); setWinery(""); setAppellation("");
+      })}>Azzera filtri</button>
+    </div>
+    {page.items.length ? <ul className="record-list">{page.items.map(w => <li key={w.id}>
+      <Link href={`/admin/vini/${w.id}`} onClick={rememberCatalog} className="record-link">
+        <span><strong>{w.name}{w.vintage ? ` · ${w.vintage}` : ""}</strong><small>{wineries.get(w.winery_id)} · {regions.get(w.region_id)?.name_it}</small></span>
         <span className="note">{categories.get(w.category_id)}</span>
       </Link>
     </li>)}</ul> : <p>Nessun vino trovato.</p>}
+    <ListPagination {...page} />
   </section>;
 }
 
-function Prices({ suffix = "", bottle, glass, status }: { suffix?: string; bottle?: number | null; glass?: number | null; status: Status }) {
-  return <div className="fields three">
+function Prices({ suffix = "", bottle, glass, status, compact }: { suffix?: string; bottle?: number | null; glass?: number | null; status: Status; compact?: boolean }) {
+  return <div className={compact ? "assignment-fields" : "fields three"}>
     <label>Bottiglia (€)<input name={`bottle_price${suffix}`} type="number" step="0.01" min="0" max="999999.99" defaultValue={bottle ?? ""} required /></label>
     <label>Calice (€)<input name={`glass_price${suffix}`} type="number" step="0.01" min="0" max="999999.99" defaultValue={glass ?? ""} /></label>
     <label>Stato<select name={`status${suffix}`} aria-label="Stato" defaultValue={status}>
@@ -55,6 +119,9 @@ export function AssignmentBoard({ restaurantId, wines, assignments, refs, catego
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [order, setOrder] = useState(categories.map(c => c.id));
+  const [assignedSearch, setAssignedSearch] = useState("");
+  const [availability, setAvailability] = useState("");
+  const list = useAdminList();
   const catalog = new Map(wines.map(w => [w.id, w]));
   const wineries = new Map(refs.wineries.map(w => [w.id, w.name]));
   const assigned = new Set(assignments.map(a => a.wine_id));
@@ -65,6 +132,14 @@ export function AssignmentBoard({ restaurantId, wines, assignments, refs, catego
   const filtered = wines.filter(w => !assigned.has(w.id) &&
     searchable(`${w.name} ${wineries.get(w.winery_id) ?? ""}`).includes(searchable(search)));
   const categoryNames = new Map(categories.map(c => [c.id, c.name_it]));
+  const counts = countByCategory(assignments, row => catalog.get(row.wine_id)?.category_id ?? "");
+  const selectedCategory = counts.has(list.category) ? list.category : "";
+  const matches = assignments.filter(row => {
+    const wine = catalog.get(row.wine_id);
+    return (!selectedCategory || wine?.category_id === selectedCategory) && (!availability || row.status === availability)
+      && searchable(`${wine?.name ?? ""} ${wineries.get(wine?.winery_id ?? "") ?? ""} ${wine?.vintage ?? ""}`).includes(searchable(assignedSearch));
+  });
+  const page = list.paginate(matches);
   const ordered = [...order.filter(id => categoryNames.has(id)), ...categories.filter(c => !order.includes(c.id)).map(c => c.id)];
   function move(index: number, delta: number) {
     const next = [...ordered];
@@ -114,12 +189,24 @@ export function AssignmentBoard({ restaurantId, wines, assignments, refs, catego
       </ActionForm>
     </details>}
 
-    <section className="panel">
-      <h2 className="mb-4">Vini in carta</h2>
-      {assignments.length ? <ul className="record-list">{assignments.map(row => {
+    <section className="panel grid min-w-0 gap-3">
+      <h2>Vini in carta</h2>
+      <CategoryTabs categories={categories.filter(c => counts.has(c.id))} selected={selectedCategory}
+        counts={counts} total={assignments.length} onSelect={list.selectCategory} />
+      <div className="fields">
+        <label>Cerca in carta<input type="search" value={assignedSearch} placeholder="Nome, cantina o annata"
+          onChange={e => list.change(() => setAssignedSearch(e.target.value))} /></label>
+        <ListStatus value={availability} onChange={value => list.change(() => setAvailability(value))} />
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <ResultCount start={page.start} count={page.items.length} total={page.total} />
+        <button type="button" className="secondary compact" onClick={() => list.reset(() => { setAssignedSearch(""); setAvailability(""); })}>Azzera filtri</button>
+      </div>
+      {page.items.length ? <ul className="record-list">{page.items.map(row => {
         const wine = catalog.get(row.wine_id);
-        return <li key={row.wine_id} className="py-4">
-          <ActionForm run={async form => {
+        return <li key={`${row.wine_id}:${list.revision}`} className="py-3">
+          <ActionForm onDirtyChange={changed => list.reportDirty(row.wine_id, changed)}
+            onPendingChange={pending => list.reportPending(row.wine_id, pending)} run={async form => {
             if (form.get("operation") === "remove" && !window.confirm("Rimuovere il vino e i relativi abbinamenti da questa carta?")) return;
             return changeAssignment(restaurantId, row.wine_id, form);
           }}>
@@ -127,14 +214,17 @@ export function AssignmentBoard({ restaurantId, wines, assignments, refs, catego
               <strong>{wine?.name ?? "Vino"}{wine?.vintage ? ` · ${wine.vintage}` : ""}</strong>
               <span className="note">{wine && wineries.get(wine.winery_id)}</span>
             </div>
-            <Prices key={`${row.bottle_price}:${row.glass_price}:${row.status}`} bottle={row.bottle_price} glass={row.glass_price} status={row.status} />
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap items-end gap-2">
+              <Prices compact key={`${row.bottle_price}:${row.glass_price}:${row.status}`} bottle={row.bottle_price} glass={row.glass_price} status={row.status} />
+              <div className="flex flex-wrap gap-2">
               <button className="secondary compact" name="operation" value="save">Salva</button>
               <button className="secondary compact text-bordeaux" formNoValidate name="operation" value="remove"><Trash2 size={14} /> Rimuovi</button>
+              </div>
             </div>
           </ActionForm>
         </li>;
-      })}</ul> : <p className="note">Nessun vino assegnato.</p>}
+      })}</ul> : <p className="note">{assignments.length ? "Nessun vino corrisponde ai filtri." : "Nessun vino assegnato."}</p>}
+      <ListPagination {...page} />
     </section>
   </div>;
 }

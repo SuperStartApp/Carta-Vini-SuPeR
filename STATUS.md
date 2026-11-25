@@ -1,5 +1,12 @@
 # Stato del progetto
 
+## Fase 4.3 · 25 novembre 2026
+
+- Catalogo, Carta vini, Menù e Drink List amministrativi organizzati in schede per categoria, con contatori, ricerca, filtri e pagine da 25. Conservazione della vista durante i salvataggi e al ritorno dalla scheda del prodotto.
+- Conferma prima di abbandonare modifiche negli elenchi modificabili. Menù e Drink List pubblici con allergeni compatti in riga, pulsanti da almeno 44 × 44 px e dialoghi bilingui esistenti.
+- Lint, TypeScript e build superati. Collaudo browser con dati isolati (200 vini, 100 piatti e 50 bevande) da 320 a 1280 px. Verificati ricerca e filtri combinati, ordinamento, paginazione, conservazione della posizione dopo il salvataggio, conferma delle modifiche in corso, allergeni singoli e multipli, legenda e navigazione da tastiera.
+- Collaudo locale approvato dall'amministratore, che ha autorizzato il rilascio su `main`. La fase interviene sull'interfaccia e non richiede migrazioni.
+
 ## Fase 4.2 · 25 novembre 2026
 
 - Denominazioni, specificazioni e caratteristiche facoltative nel catalogo e nella carta pubblica. I nuovi filtri sono limitati alla categoria attiva e la selezione multipla richiede tutte le caratteristiche scelte.
