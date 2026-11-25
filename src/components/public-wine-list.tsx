@@ -35,7 +35,7 @@ const copy = {
     tagline: "Un viaggio tra territori, vitigni e passioni.",
     close: "Chiudi", remove: "Rimuovi", findOption: "Cerca opzione", showWines: "Mostra vini",
     menu: "Menù", navigation: "Profilo del ristorante", backToDish: "Torna al piatto",
-    cocktail: "Cocktail", cocktailTagline: "L'arte di miscelare, il piacere di scoprire.",
+    drink: "Drink", drinkTagline: "Un brindisi a ogni occasione.",
   },
   en: {
     list: "Wine list", search: "Search the wine list", filter: "Filters", all: "All",
@@ -46,7 +46,7 @@ const copy = {
     tagline: "A journey through wine regions, grape varieties and passion.",
     close: "Close", remove: "Remove", findOption: "Find option", showWines: "Show wines",
     menu: "Menu", navigation: "Restaurant sections", backToDish: "Back to the dish",
-    cocktail: "Cocktail", cocktailTagline: "The art of mixing, the pleasure of discovery.",
+    drink: "Drink", drinkTagline: "A toast for every occasion.",
   },
 };
 
@@ -242,14 +242,14 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
       <header className="public-header">
         <div className="public-logo">{logo ? <ExternalImage key={logo} url={logo} alt="" className="max-h-20 max-w-44 object-contain" fallback={brandIcon} /> : brandIcon}</div>
         <p>{menu.restaurant.name}</p>
-        <h1>{view === "cocktail" ? "Cocktail List" : view === "menu" ? t.menu : t.list}</h1>
+        <h1>{view === "cocktail" ? "Drink List" : view === "menu" ? t.menu : t.list}</h1>
         <div className="boutique-ornament" aria-hidden="true"><Grape size={15} /></div>
-        <span className="boutique-tagline">{view === "cocktail" ? t.cocktailTagline : t.tagline}</span>
+        <span className="boutique-tagline">{view === "cocktail" ? t.drinkTagline : t.tagline}</span>
       </header>
       {(hasMenu || hasCocktails) && <nav className="tabs public-section-tabs" aria-label={t.navigation}>
         {(hasMenu || menu.wines.length > 0) && <button type="button" aria-pressed={view === "wine"} onClick={() => setView("wine")}>{t.list}</button>}
         {hasMenu && <button type="button" aria-pressed={view === "menu"} onClick={() => { setPairing(undefined); setView("menu"); }}>{t.menu}</button>}
-        {hasCocktails && <button type="button" aria-pressed={view === "cocktail"} onClick={() => setView("cocktail")}>{t.cocktail}</button>}
+        {hasCocktails && <button type="button" aria-pressed={view === "cocktail"} onClick={() => setView("cocktail")}>{t.drink}</button>}
       </nav>}
       {hasCocktails && <div hidden={view !== "cocktail"}><PublicDishes kind="cocktail" lang={lang} money={money}
         categories={cocktails.map(category => ({ ...category, dishes: category.cocktails }))} /></div>}

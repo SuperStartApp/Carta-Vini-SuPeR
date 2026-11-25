@@ -76,7 +76,7 @@ export function RestaurantForm({ restaurant }: { restaurant?: Restaurant }) {
     <div className="fields items-center">
       <label>Colore principale<input name="primary_color" type="color" defaultValue={restaurant?.primary_color ?? "#711f3a"} /></label>
       <label className="check-field"><input name="is_published" type="checkbox" defaultChecked={restaurant?.is_published} /> Pubblica il ristorante</label>
-      <label className="check-field"><input name="cocktail_enabled" type="checkbox" defaultChecked={restaurant?.cocktail_enabled} /> Cocktail List attiva</label>
+      <label className="check-field"><input name="cocktail_enabled" type="checkbox" defaultChecked={restaurant?.cocktail_enabled} /> Drink List attiva</label>
     </div>
     <button className="primary justify-self-start">{restaurant ? "Salva impostazioni" : "Crea ristorante"}</button>
   </ActionForm>;

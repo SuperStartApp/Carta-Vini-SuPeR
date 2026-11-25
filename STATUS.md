@@ -1,5 +1,13 @@
 # Stato del progetto
 
+## Fase 4.1 · 25 novembre 2026
+
+- Drink List con etichette aggiornate, identità Wine Boutique e icone per le categorie riconoscibili.
+- L'amministratore ha applicato la migrazione del modello e verificato le nove categorie su Supabase ufficiale. Nomi SQL storici, RPC, RLS e dati già salvati restano invariati.
+- Corretta la generazione dei link pubblici. Copia usava l'origine della finestra e apertura usava un percorso relativo. Ora entrambe usano `publicRestaurantUrl`. L'amministratore ha confermato `NEXT_PUBLIC_APP_URL` su Vercel Production.
+- Controlli finali superati. In Chrome con Auth/API simulate, il gestionale aperto su un'origine diversa ha copiato e aperto il link canonico di Enosteria del Gallo. Verificati anche copia manuale, stato bozza e rifiuto di configurazioni mancanti, invalide o temporanee in produzione.
+- Lint, TypeScript e build superati. Su PostgreSQL isolato verificati i 33 controlli strutturali esistenti, il modello bilingue, l'inizializzazione ripetibile e l'integrità di categorie, bevande, allergeni e risposta RPC preesistenti. Collaudo Chrome a 320, 360, 390, 412, 768 e 1280 px con cocktail, birre, soft drink, distillati e categoria personalizzata.
+
 ## Fase 4 · 25 novembre 2026
 
 - Cocktail List con archivio per ristorante, categorie, allergeni facoltativi, stati e ordinamento. Il flag pubblico è disattivato per impostazione predefinita.

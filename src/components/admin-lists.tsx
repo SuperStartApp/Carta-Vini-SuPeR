@@ -139,23 +139,24 @@ export function AssignmentBoard({ restaurantId, wines, assignments, refs, catego
   </div>;
 }
 
-export function PublicLink({ path, published }: { path: string; published: boolean }) {
-  const [copied, setCopied] = useState(false);
-  const [manual, setManual] = useState("");
+export function PublicLink({ url, published }: { url: string | null; published: boolean }) {
+  const [copyResult, setCopyResult] = useState<"copied" | "manual">();
+  if (!url) return <p className="panel error">Link pubblico non configurato. Verifica NEXT_PUBLIC_APP_URL.</p>;
+
   return <div className="panel grid gap-4">
     <p className="note">{published ? "Carta pubblicata" : "Ristorante in bozza. Pubblicalo dalle impostazioni per attivare il link."}</p>
-    <code className="break-all">{manual || path}</code>
+    <code className="break-all select-all">{url}</code>
     <div className="flex gap-2 flex-wrap">
-      <button className="secondary" onClick={async () => {
-        const url = new URL(path, window.location.origin).href;
+      <button type="button" className="secondary" onClick={async () => {
         try {
           await navigator.clipboard.writeText(url);
-          setCopied(true);
+          setCopyResult("copied");
         } catch {
-          setManual(url);
+          setCopyResult("manual");
         }
-      }}>{copied ? <Check size={16} /> : <Copy size={16} />}{copied ? "Copiato" : "Copia link"}</button>
-      {published && <Link href={path} target="_blank" className="primary"><ExternalLink size={16} /> Apri carta</Link>}
+      }}>{copyResult === "copied" ? <Check size={16} /> : <Copy size={16} />}{copyResult === "copied" ? "Copiato" : "Copia link"}</button>
+      {published && <a href={url} target="_blank" rel="noopener noreferrer" className="primary"><ExternalLink size={16} /> Apri carta pubblica</a>}
     </div>
+    {copyResult === "manual" && <p className="note" role="status">Copia il link selezionando l’indirizzo qui sopra.</p>}
   </div>;
 }

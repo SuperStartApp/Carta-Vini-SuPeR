@@ -79,7 +79,7 @@ export async function saveDish(restaurantId: string, dishId: string | null, form
       : await db.rpc("swm_save_dish", { dish_data: row, allergen_ids: allergenIds, wine_ids: wineIds });
     check(result.error);
     refresh(restaurantId);
-    return { success: kind === "cocktail" ? "Cocktail salvato." : "Piatto salvato." };
+    return { success: kind === "cocktail" ? "Bevanda salvata." : "Piatto salvato." };
   } catch (error) { return failure(error); }
 }
 
@@ -89,7 +89,7 @@ export async function changeDish(restaurantId: string, dishId: string, form: For
     const operation = form.get("operation");
     const source = tables(kind);
     const table = db.from(source.items);
-    const label = kind === "cocktail" ? "Cocktail" : "Piatto";
+    const drink = kind === "cocktail";
     if (operation === "duplicate") {
       const [dish, allergens, pairings] = await Promise.all([
         table.select("category_id,name_it,name_en,description_it,description_en,price").eq("restaurant_id", restaurantId).eq("id", dishId).single(),
@@ -97,7 +97,7 @@ export async function changeDish(restaurantId: string, dishId: string, form: For
         kind === "menu" ? db.from("swm_dish_pairings").select("wine_id").eq("restaurant_id", restaurantId).eq("dish_id", dishId).order("slot") : null,
       ]);
       check(dish.error); check(allergens.error); check(pairings?.error ?? null);
-      if (!dish.data) throw new Error(`${label} non trovato.`);
+      if (!dish.data) throw new Error(drink ? "Bevanda non trovata." : "Piatto non trovato.");
       const copy = { ...dish.data, restaurant_id: restaurantId, status: "suspended" };
       const allergen_ids = (allergens.data ?? []).map(row => row.allergen_id);
       const result = kind === "cocktail"
@@ -105,12 +105,13 @@ export async function changeDish(restaurantId: string, dishId: string, form: For
         : await db.rpc("swm_save_dish", { dish_data: copy, allergen_ids, wine_ids: (pairings?.data ?? []).map(row => row.wine_id) });
       check(result.error);
       refresh(restaurantId);
-      return { success: `Copia creata come ${label.toLowerCase()} sospeso.` };
+      return { success: drink ? "Copia creata come bevanda sospesa." : "Copia creata come piatto sospeso." };
     }
     const query = operation === "delete" ? table.delete() : table.update({ price: price(form), status: status(form), position: position(form) });
     check((await query.eq("restaurant_id", restaurantId).eq("id", dishId).select("id").single()).error);
     refresh(restaurantId);
-    return { success: `${label} ${operation === "delete" ? "eliminato" : "aggiornato"}.` };
+    if (drink) return { success: operation === "delete" ? "Bevanda eliminata." : "Bevanda aggiornata." };
+    return { success: operation === "delete" ? "Piatto eliminato." : "Piatto aggiornato." };
   } catch (error) { return failure(error); }
 }
 

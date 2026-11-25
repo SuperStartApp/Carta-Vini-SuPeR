@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
-import { Info, Search, Wine, X } from "lucide-react";
+import { Beer, Circle, Citrus, Coffee, CupSoda, GlassWater, Info, Martini, Search, Sparkles, Wine, WineOff, X } from "lucide-react";
 import { allergenLegend } from "../lib/allergen-legend";
 import type { Allergen, ListKind, PublicItem } from "../lib/menu";
 import type { Label } from "../lib/models";
@@ -13,14 +13,14 @@ import type { PublicWine } from "./public-wine-list";
 const copy = {
   it: {
     categories: "Categorie del menù", search: "Cerca piatti", noResults: "Nessun piatto corrisponde alla ricerca.",
-    cocktailCategories: "Categorie dei cocktail", cocktailSearch: "Cerca cocktail", cocktailNoResults: "Nessun cocktail corrisponde alla ricerca.",
+    drinkCategories: "Categorie Drink List", drinkSearch: "Cerca bevanda", drinkNoResults: "Nessuna bevanda corrisponde alla ricerca.",
     allergens: "Allergeni", legend: "Legenda allergeni", close: "Chiudi", pairing: "Vini consigliati",
     bottle: "Bottiglia", glass: "Calice", openWine: "Apri nella carta vini",
     warning: "In caso di allergie o intolleranze, chiedi al personale ulteriori informazioni e verifica il rischio di contaminazioni crociate.",
   },
   en: {
     categories: "Menu categories", search: "Search dishes", noResults: "No dishes match your search.",
-    cocktailCategories: "Cocktail categories", cocktailSearch: "Search cocktails", cocktailNoResults: "No cocktails match your search.",
+    drinkCategories: "Drink categories", drinkSearch: "Search drinks", drinkNoResults: "No drinks match your search.",
     allergens: "Allergens", legend: "Allergen guide", close: "Close", pairing: "Wine pairings",
     bottle: "Bottle", glass: "Glass", openWine: "Open in the wine list",
     warning: "If you have an allergy or intolerance, ask our staff for more information and to check the risk of cross-contact.",
@@ -30,6 +30,19 @@ const copy = {
 const text = (row: { name_it: string; name_en?: string | null }, lang: Language) => translated(row.name_it, row.name_en, lang);
 const details = (row: { description_it?: string; description_en?: string }, lang: Language) =>
   translated(row.description_it, row.description_en, lang);
+
+function drinkCategoryIcon(category: Label) {
+  const names = searchable(`${category.name_it} ${category.name_en ?? ""}`);
+  if (/\b(analcolic[oi]|mocktails?|alcohol.free)\b/.test(names)) return WineOff;
+  if (/\b(signature)\b/.test(names)) return Sparkles;
+  if (/\b(spritz|aperitiv[oi]|aperitifs?)\b/.test(names)) return Citrus;
+  if (/\b(birr[ae]|beers?)\b/.test(names)) return Beer;
+  if (/\b(soft drinks?|sodas?)\b/.test(names)) return CupSoda;
+  if (/\b(distillat[oi]|spirits?|digestiv[oi]|digestifs?)\b/.test(names)) return GlassWater;
+  if (/\b(caffetteria|caffe|coffee|hot drinks?)\b/.test(names)) return Coffee;
+  if (/\bcocktails?\b/.test(names)) return Martini;
+  return Circle;
+}
 
 export function PublicDishes({ categories, wines = [], lang, money, onWine, kind = "menu" }: {
   categories: (Label & { dishes: (PublicItem & { paired_wine_ids?: string[] })[] })[];
@@ -46,7 +59,8 @@ export function PublicDishes({ categories, wines = [], lang, money, onWine, kind
   const list = useRef<HTMLDivElement>(null);
   const dialogTitle = useId();
   const t = copy[lang];
-  const searchLabel = kind === "cocktail" ? t.cocktailSearch : t.search;
+  const drink = kind === "cocktail";
+  const searchLabel = drink ? t.drinkSearch : t.search;
   const wineById = new Map(wines.map(wine => [wine.id, wine]));
   const registered = new Map(categories.flatMap(category => category.dishes.flatMap(dish => dish.allergens)).map(a => [a.id, a]));
   const search = searchable(query);
@@ -71,17 +85,22 @@ export function PublicDishes({ categories, wines = [], lang, money, onWine, kind
         onClick={event => open(allergenLegend.map(row => registered.get(row.id) ?? row), true, event.currentTarget)}><Info size={16} /> {t.legend}</button>
     </div>
     <p className="dish-warning">{t.warning}</p>
-    {!search && <nav ref={tabs} className="tabs public-tabs" aria-label={kind === "cocktail" ? t.cocktailCategories : t.categories}>
-      {categories.map(category => <button type="button" key={category.id} aria-pressed={category.id === active?.id} onClick={() => {
-        const bar = tabs.current;
-        if (bar && list.current && bar.getBoundingClientRect().top <= 1) {
-          window.scrollTo(0, window.scrollY + list.current.getBoundingClientRect().top - bar.offsetHeight);
-        }
-        setCategory(category.id);
-      }}>{text(category, lang)}</button>)}
+    {!search && <nav ref={tabs} className="tabs public-tabs" aria-label={drink ? t.drinkCategories : t.categories}>
+      {categories.map(category => {
+        const Icon = drink ? drinkCategoryIcon(category) : null;
+        return <button type="button" key={category.id} aria-pressed={category.id === active?.id} onClick={() => {
+          const bar = tabs.current;
+          if (bar && list.current && bar.getBoundingClientRect().top <= 1) {
+            window.scrollTo(0, window.scrollY + list.current.getBoundingClientRect().top - bar.offsetHeight);
+          }
+          setCategory(category.id);
+        }}>
+          {Icon && <Icon size={14} aria-hidden="true" />}{text(category, lang)}
+        </button>;
+      })}
     </nav>}
     <div ref={list} className="grid gap-3 pt-3">
-      {!visible.length && <p role="status" className="public-empty">{kind === "cocktail" ? t.cocktailNoResults : t.noResults}</p>}
+      {!visible.length && <p role="status" className="public-empty">{drink ? t.drinkNoResults : t.noResults}</p>}
       {visible.map(category => <section key={category.id}>
         <h2 className={search ? "dish-category-title" : "sr-only"}>{text(category, lang)}</h2>
         <div className="grid gap-2">{category.dishes.map(dish => {

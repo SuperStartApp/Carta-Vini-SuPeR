@@ -13,6 +13,8 @@ npm.cmd run dev
 
 Aprire [il gestionale locale](http://127.0.0.1:3000/admin). Usare `npm` con shell che lo risolvono direttamente.
 
+`NEXT_PUBLIC_APP_URL` indica l'origine usata nel tab **Link pubblico**. Per `next dev` il valore di esempio è `http://127.0.0.1:3000`. Se si usa una porta locale diversa, indicarla nella variabile in `.env.local` e riavviare Next.js.
+
 ## Controlli
 
 ```powershell
@@ -34,12 +36,14 @@ L'amministratore ha applicato e verificato entrambe le migrazioni sul Supabase u
 
 Per abilitare il salvataggio e la duplicazione dei piatti sul Supabase ufficiale, l'amministratore deve applicare la [migrazione della fase 3](supabase/migrations/20261125000000_swm_save_dish.sql) nel SQL Editor. La migrazione crea la funzione transazionale `swm_save_dish` con i permessi del chiamante. I piatti disponibili appaiono nel Menù pubblico dello stesso link del ristorante.
 
-### Usare Cocktail List
+### Usare Drink List
 
 La [migrazione della fase 4](supabase/migrations/20261125000001_swm_cocktail_list.sql) è già installata sul Supabase ufficiale. L'amministratore ha confermato i 10 risultati positivi della [query in sola lettura](supabase/verify/20261125000001_swm_cocktail_list.sql). La configurazione Vercel usa le stesse variabili Supabase.
 
-1. Nel tab **Cocktail** del ristorante, aggiungere i cocktail. Per un ristorante esistente senza categorie, usare **Prepara le quattro categorie iniziali** o creare categorie personalizzate.
-2. Attivare **Cocktail List attiva** nelle impostazioni del ristorante. Il tab pubblico compare sul link esistente quando il ristorante è pubblicato e la lista contiene almeno un cocktail disponibile.
+La [migrazione della fase 4.1](supabase/migrations/20261125000002_swm_drink_list_templates.sql) è installata sul Supabase ufficiale e l'amministratore ha verificato le nove categorie iniziali. Le tabelle e le funzioni conservano i nomi SQL storici, così come il flag `cocktail_enabled` e la chiave RPC `cocktails`.
+
+1. Nel tab **Drink List** del ristorante, aggiungere le bevande. Per un ristorante senza categorie, usare **Prepara le categorie iniziali** o creare categorie personalizzate.
+2. Attivare **Drink List attiva** nelle impostazioni del ristorante. Il tab pubblico **Drink** compare sul link esistente quando il ristorante è pubblicato e la lista contiene almeno una bevanda disponibile.
 
 ### Configurare l'account SuPeR
 
@@ -65,6 +69,11 @@ Il flusso amministrativo e la pubblicazione sono stati collaudati con [Enoteca W
 
 ## Configurazione manuale di Vercel
 
-Importare [Carta-Vini-SuPeR](https://github.com/SuperStartApp/Carta-Vini-SuPeR) con preset **Next.js**, branch `main` e Node.js 24. In **Settings → Environment Variables** impostare `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` per gli ambienti da usare. Usare Production per il branch di produzione e Preview se si vogliono abilitare i branch di anteprima. Entrambi i valori devono appartenere allo stesso progetto Supabase. [Ambienti Vercel e variabili](https://vercel.com/docs/environment-variables)
+Importare [Carta-Vini-SuPeR](https://github.com/SuperStartApp/Carta-Vini-SuPeR) con preset **Next.js**, branch `main` e Node.js 24. In **Settings → Environment Variables** impostare:
+
+- `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` dello stesso progetto Supabase.
+- `NEXT_PUBLIC_APP_URL=https://carta-vini-super.vercel.app` in **Production**. Per generare link anche dalle build **Preview**, impostare lo stesso dominio pubblico nell'ambiente Preview.
+
+L'URL pubblico in produzione deve essere un'origine HTTPS stabile, con eventuale slash finale. Se manca o è invalido, il tab **Link pubblico** mostra l'errore di configurazione e rende indisponibili le due azioni. La variabile si applica ai nuovi deploy. [Ambienti Vercel e variabili](https://vercel.com/docs/environment-variables)
 
 Consultare [PROJECT.md](PROJECT.md) per le scelte di schema e [STATUS.md](STATUS.md) per lo stato effettivo.

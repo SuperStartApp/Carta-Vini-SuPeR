@@ -5,6 +5,7 @@ import { ReferenceEditor, RestaurantForm } from "../../../components/admin-field
 import { AssignmentBoard, CatalogList, PublicLink } from "../../../components/admin-lists";
 import { WineEditor } from "../../../components/wine-editor";
 import { RestaurantMenu } from "../restaurant-menu";
+import { publicRestaurantUrl } from "../../../lib/public-restaurant-url";
 import { getReferences, getWines } from "../../../lib/data";
 import { referenceTitles, type Assignment, type Label, type ReferenceKind, type Restaurant, type Wine, type WineGrape } from "../../../lib/models";
 import { records, requireAdmin } from "../../../lib/supabase";
@@ -131,7 +132,7 @@ async function ReferencePage({ query }: { query: Query }) {
 }
 
 function RestaurantCard({ row, tab, children }: { row: Restaurant; tab: string; children: React.ReactNode }) {
-  const tabs = [["carta", "Carta vini"], ["menu", "Menù"], ["cocktail", "Cocktail"], ["link", "Link pubblico"], ["impostazioni", "Impostazioni"]];
+  const tabs = [["carta", "Carta vini"], ["menu", "Menù"], ["cocktail", "Drink List"], ["link", "Link pubblico"], ["impostazioni", "Impostazioni"]];
   return <>
     <Heading title={row.name} subtitle={row.is_published ? "Pubblicato" : "Bozza"}>
       <Link className="secondary" href="/admin/ristoranti">Ristoranti</Link>
@@ -161,7 +162,7 @@ async function Restaurants({ id, query }: { id?: string; query: Query }) {
   const tab = query.tab === "menu" || query.tab === "cocktail" || query.tab === "link" || query.tab === "impostazioni" ? query.tab : "carta";
   if (tab === "menu") return <RestaurantCard row={row} tab={tab}><RestaurantMenu id={id} /></RestaurantCard>;
   if (tab === "cocktail") return <RestaurantCard row={row} tab={tab}><RestaurantMenu id={id} kind="cocktail" /></RestaurantCard>;
-  if (tab === "link") return <RestaurantCard row={row} tab={tab}><PublicLink path={`/r/${row.slug}`} published={row.is_published} /></RestaurantCard>;
+  if (tab === "link") return <RestaurantCard row={row} tab={tab}><PublicLink url={publicRestaurantUrl(row.slug)} published={row.is_published} /></RestaurantCard>;
   if (tab === "impostazioni") return <RestaurantCard row={row} tab={tab}><section className="panel"><RestaurantForm restaurant={row} /></section></RestaurantCard>;
   const [wines, refs, assignmentResult, orderResult] = await Promise.all([
     getWines(), getReferences(), db.from("swm_restaurant_wines").select("wine_id,bottle_price,glass_price,status").eq("restaurant_id", id),
