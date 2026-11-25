@@ -131,7 +131,7 @@ async function ReferencePage({ query }: { query: Query }) {
 }
 
 function RestaurantCard({ row, tab, children }: { row: Restaurant; tab: string; children: React.ReactNode }) {
-  const tabs = [["carta", "Carta vini"], ["menu", "Menù"], ["link", "Link pubblico"], ["impostazioni", "Impostazioni"]];
+  const tabs = [["carta", "Carta vini"], ["menu", "Menù"], ["cocktail", "Cocktail"], ["link", "Link pubblico"], ["impostazioni", "Impostazioni"]];
   return <>
     <Heading title={row.name} subtitle={row.is_published ? "Pubblicato" : "Bozza"}>
       <Link className="secondary" href="/admin/ristoranti">Ristoranti</Link>
@@ -158,8 +158,9 @@ async function Restaurants({ id, query }: { id?: string; query: Query }) {
   if (!uuid.test(id)) notFound();
   const [row] = records<Restaurant>(await db.from("swm_restaurants").select("*").eq("id", id));
   if (!row) notFound();
-  const tab = query.tab === "menu" || query.tab === "link" || query.tab === "impostazioni" ? query.tab : "carta";
+  const tab = query.tab === "menu" || query.tab === "cocktail" || query.tab === "link" || query.tab === "impostazioni" ? query.tab : "carta";
   if (tab === "menu") return <RestaurantCard row={row} tab={tab}><RestaurantMenu id={id} /></RestaurantCard>;
+  if (tab === "cocktail") return <RestaurantCard row={row} tab={tab}><RestaurantMenu id={id} kind="cocktail" /></RestaurantCard>;
   if (tab === "link") return <RestaurantCard row={row} tab={tab}><PublicLink path={`/r/${row.slug}`} published={row.is_published} /></RestaurantCard>;
   if (tab === "impostazioni") return <RestaurantCard row={row} tab={tab}><section className="panel"><RestaurantForm restaurant={row} /></section></RestaurantCard>;
   const [wines, refs, assignmentResult, orderResult] = await Promise.all([

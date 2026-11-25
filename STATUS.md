@@ -1,5 +1,13 @@
 # Stato del progetto
 
+## Fase 4 · 25 novembre 2026
+
+- Cocktail List con archivio per ristorante, categorie, allergeni facoltativi, stati e ordinamento. Il flag pubblico è disattivato per impostazione predefinita.
+- L'amministratore ha applicato la migrazione `20261125000001_swm_cocktail_list.sql` al Supabase ufficiale e confermato 10/10 controlli post-installazione.
+- Lint, TypeScript e build superati. In PostgreSQL isolato verificati 23 controlli esistenti e 10 nuovi, rollback, autorizzazioni, isolamento, ordinamento, visibilità e risposta invariata per vino e menù. In Chrome con Auth/API simulate verificati gestionale, ricerca, lingua, allergeni, vista solo cocktail, disattivazione senza perdita dei dati e navigazione delle tre sezioni a 320, 360, 390, 412, 768 e 1280 px.
+- Il controllo in sola lettura della RPC ufficiale per Enoteca Wine Art ha restituito 6 vini e 8 piatti, con prezzi, categorie, allergeni e abbinamenti coerenti. La nuova chiave `cocktails` era presente e vuota.
+- L'amministratore ha autorizzato il rilascio su `main`, collegato al deploy automatico Vercel. Il collaudo operativo di Cocktail List resta a cura dell'amministratore.
+
 ## Fase 3.1 · 25 novembre 2026
 
 - Nel menù pubblico gli allergeni occupano pulsanti compatti con icona e numero, colore del ristorante e area di tocco di almeno 44 × 44 px. La denominazione completa resta disponibile come nome accessibile e nel dialogo bilingue, insieme alla descrizione. Legenda generale e avvertenza restano visibili.

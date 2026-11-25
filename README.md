@@ -34,6 +34,13 @@ L'amministratore ha applicato e verificato entrambe le migrazioni sul Supabase u
 
 Per abilitare il salvataggio e la duplicazione dei piatti sul Supabase ufficiale, l'amministratore deve applicare la [migrazione della fase 3](supabase/migrations/20261125000000_swm_save_dish.sql) nel SQL Editor. La migrazione crea la funzione transazionale `swm_save_dish` con i permessi del chiamante. I piatti disponibili appaiono nel Menù pubblico dello stesso link del ristorante.
 
+### Usare Cocktail List
+
+La [migrazione della fase 4](supabase/migrations/20261125000001_swm_cocktail_list.sql) è già installata sul Supabase ufficiale. L'amministratore ha confermato i 10 risultati positivi della [query in sola lettura](supabase/verify/20261125000001_swm_cocktail_list.sql). La configurazione Vercel usa le stesse variabili Supabase.
+
+1. Nel tab **Cocktail** del ristorante, aggiungere i cocktail. Per un ristorante esistente senza categorie, usare **Prepara le quattro categorie iniziali** o creare categorie personalizzate.
+2. Attivare **Cocktail List attiva** nelle impostazioni del ristorante. Il tab pubblico compare sul link esistente quando il ristorante è pubblicato e la lista contiene almeno un cocktail disponibile.
+
 ### Configurare l'account SuPeR
 
 1. In **Authentication → Users**, creare o individuare l'utente SuPeR. Per un nuovo utente con password, usare **Add user → Create new user**, inserire l'email e la password e confermare l'email secondo il flusso amministrativo del progetto.

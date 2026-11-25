@@ -153,7 +153,7 @@ body {
   .wine-notes dt svg { @apply mr-1 inline align-[-0.12em]; }
   .wine-notes dd { @apply inline whitespace-pre-line; }
   .boutique-footer { @apply mt-8 border-t pt-4 text-center text-sm text-neutral-600; border-color: var(--accent-line); }
-  .public-section-tabs { @apply mb-2 justify-center; }
+  .public-section-tabs { @apply mb-2; justify-content: safe center; }
   .public-section-tabs button { @apply bg-white; border-color: var(--accent-line); color: var(--accent-ink); }
   .public-section-tabs button[aria-pressed="true"] { background: var(--restaurant-accent); border-color: var(--accent-ink); color: var(--accent-tab-text); }
   .dish-tools { @apply gap-1.5 sm:gap-2; }

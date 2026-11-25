@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Check, Copy, Plus, Trash2, X } from "lucide-react";
-import { saveDish, changeDish, saveMenuCategory } from "../app/admin/menu-actions";
-import type { Allergen, Dish, MenuCategory, PairingOption } from "../lib/menu";
+import { saveDish, changeDish, saveMenuCategory, initCocktailCategories } from "../app/admin/menu-actions";
+import type { Allergen, Dish, ListKind, MenuCategory, PairingOption } from "../lib/menu";
 import { statuses } from "../lib/models";
 import { searchable } from "../lib/search";
 import { ActionForm } from "./action-form";
@@ -55,21 +55,22 @@ function PairingPicker({ options, selected, onChange }: {
   </>;
 }
 
-function DishEditor({ restaurantId, dish, categories, allergens, options, onSaved, onCancel }: {
-  restaurantId: string; dish?: Dish; categories: MenuCategory[]; allergens: Allergen[];
+function DishEditor({ restaurantId, kind, dish, categories, allergens, options, onSaved, onCancel }: {
+  restaurantId: string; kind: ListKind; dish?: Dish; categories: MenuCategory[]; allergens: Allergen[];
   options: PairingOption[]; onSaved: () => void; onCancel: () => void;
 }) {
   const [allergenIds, setAllergens] = useState(dish?.allergen_ids ?? []);
   const [wineIds, setWines] = useState(dish?.wine_ids ?? []);
+  const item = kind === "cocktail" ? "cocktail" : "piatto";
   return <section className="panel">
-    <h2 className="mb-3">{dish ? dish.name_it : "Nuovo piatto"}</h2>
+    <h2 className="mb-3">{dish ? dish.name_it : `Nuovo ${item}`}</h2>
     <ActionForm run={async form => {
-      const result = await saveDish(restaurantId, dish?.id ?? null, form);
+      const result = await saveDish(restaurantId, dish?.id ?? null, form, kind);
       if ("success" in result) onSaved();
       return result;
     }}>
       <fieldset className="grid gap-3">
-        <legend className="mb-2 font-semibold">Informazioni del piatto</legend>
+        <legend className="mb-2 font-semibold">Informazioni del {item}</legend>
         <div className="fields">
           <label>Categoria<select name="category_id" required defaultValue={dish?.category_id ?? categories[0]?.id ?? ""}>
             {!categories.length && <option value="">Crea prima una categoria</option>}
@@ -100,24 +101,24 @@ function DishEditor({ restaurantId, dish, categories, allergens, options, onSave
           })}
         </div>
       </fieldset>
-      <fieldset className="grid gap-2 border-t border-line pt-3">
+      {kind === "menu" && <fieldset className="grid gap-2 border-t border-line pt-3">
         <legend className="font-semibold">Abbinamenti consigliati</legend>
         <PairingPicker options={options} selected={wineIds} onChange={setWines} />
-      </fieldset>
+      </fieldset>}
       <div className="flex flex-wrap gap-2">
-        <button className="primary" disabled={!categories.length}>Salva piatto</button>
+        <button className="primary" disabled={!categories.length}>Salva {item}</button>
         <button type="button" className="secondary" onClick={onCancel}>Torna all’elenco</button>
       </div>
     </ActionForm>
   </section>;
 }
 
-function CategoryForm({ restaurantId, category, used, initialPosition }: {
-  restaurantId: string; category?: MenuCategory; used?: boolean; initialPosition: number;
+function CategoryForm({ restaurantId, kind, category, used, initialPosition }: {
+  restaurantId: string; kind: ListKind; category?: MenuCategory; used?: boolean; initialPosition: number;
 }) {
   return <ActionForm run={form => {
     if (form.get("operation") === "delete" && !window.confirm("Eliminare questa categoria?")) return Promise.resolve();
-    return saveMenuCategory(restaurantId, category?.id ?? null, form);
+    return saveMenuCategory(restaurantId, category?.id ?? null, form, kind);
   }}>
     <div className="fields three">
       <label>Nome italiano<input name="name_it" required defaultValue={category?.name_it} /></label>
@@ -126,14 +127,14 @@ function CategoryForm({ restaurantId, category, used, initialPosition }: {
     </div>
     <div className="flex flex-wrap gap-2">
       <button className="secondary compact">{category ? "Salva categoria" : "Aggiungi categoria"}</button>
-      {category && <button disabled={used} title={used ? "La categoria contiene piatti" : undefined}
+      {category && <button disabled={used} title={used ? "La categoria contiene voci" : undefined}
         formNoValidate className="secondary compact" name="operation" value="delete"><Trash2 size={14} /> Elimina categoria</button>}
     </div>
   </ActionForm>;
 }
 
-export function MenuBoard({ restaurantId, dishes, categories, allergens, options }: {
-  restaurantId: string; dishes: Dish[]; categories: MenuCategory[]; allergens: Allergen[]; options: PairingOption[];
+export function MenuBoard({ restaurantId, kind, dishes, categories, allergens, options }: {
+  restaurantId: string; kind: ListKind; dishes: Dish[]; categories: MenuCategory[]; allergens: Allergen[]; options: PairingOption[];
 }) {
   const [editor, setEditor] = useState<string>();
   const [notice, setNotice] = useState("");
@@ -141,32 +142,38 @@ export function MenuBoard({ restaurantId, dishes, categories, allergens, options
   const [categoryId, setCategoryId] = useState("");
   const [status, setStatus] = useState("");
   const editing = dishes.find(dish => dish.id === editor);
+  const item = kind === "cocktail" ? "cocktail" : "piatto";
   const nextPosition = Math.min(2147483647, Math.max(-10, ...categories.map(category => category.position)) + 10);
 
-  if (editor === "new" || editing) return <DishEditor key={editor} restaurantId={restaurantId} dish={editing}
+  if (editor === "new" || editing) return <DishEditor key={editor} restaurantId={restaurantId} kind={kind} dish={editing}
     categories={categories} allergens={allergens} options={options} onCancel={() => setEditor(undefined)}
-    onSaved={() => { setEditor(undefined); setNotice("Piatto salvato."); }} />;
+    onSaved={() => { setEditor(undefined); setNotice(kind === "cocktail" ? "Cocktail salvato." : "Piatto salvato."); }} />;
 
   return <div className="grid gap-4">
+    {kind === "cocktail" && !categories.length && <section className="panel">
+      <ActionForm run={initCocktailCategories.bind(null, restaurantId)}>
+        <button className="secondary justify-self-start">Prepara le quattro categorie iniziali</button>
+      </ActionForm>
+    </section>}
     <details className="panel">
-      <summary className="font-semibold">Categorie del menù</summary>
+      <summary className="font-semibold">{kind === "cocktail" ? "Categorie dei cocktail" : "Categorie del menù"}</summary>
       <p className="note my-3">Le posizioni più basse vengono mostrate per prime. Una categoria si elimina quando è vuota.</p>
       <ul className="record-list">{categories.map(category => <li key={category.id} className="py-2">
         <details><summary>{category.name_it} <span className="note">· {category.position}</span></summary>
-          <div className="mt-2"><CategoryForm restaurantId={restaurantId} category={category}
+          <div className="mt-2"><CategoryForm restaurantId={restaurantId} kind={kind} category={category}
             initialPosition={nextPosition} used={dishes.some(dish => dish.category_id === category.id)} /></div>
         </details>
       </li>)}</ul>
-      <div className="mt-3"><CategoryForm restaurantId={restaurantId} initialPosition={nextPosition} /></div>
+      <div className="mt-3"><CategoryForm restaurantId={restaurantId} kind={kind} initialPosition={nextPosition} /></div>
     </details>
     <section className="panel grid gap-4">
       <header className="flex flex-wrap items-center justify-between gap-2">
-        <h2>Piatti del ristorante</h2>
-        <button className="primary compact" type="button" onClick={() => setEditor("new")} disabled={!categories.length}><Plus size={16} /> Nuovo piatto</button>
+        <h2>{kind === "cocktail" ? "Cocktail del ristorante" : "Piatti del ristorante"}</h2>
+        <button className="primary compact" type="button" onClick={() => setEditor("new")} disabled={!categories.length}><Plus size={16} /> Nuovo {item}</button>
       </header>
       {notice && <p className="note" role="status">{notice}</p>}
       <div className="fields three">
-        <label>Cerca piatto<input type="search" value={query} onChange={event => setQuery(event.target.value)} /></label>
+        <label>Cerca {item}<input type="search" value={query} onChange={event => setQuery(event.target.value)} /></label>
         <label>Categoria<select value={categoryId} onChange={event => setCategoryId(event.target.value)}>
           <option value="">Tutte</option>{categories.map(category => <option key={category.id} value={category.id}>{category.name_it}</option>)}
         </select></label>
@@ -182,7 +189,7 @@ export function MenuBoard({ restaurantId, dishes, categories, allergens, options
             <button className="mb-2 font-semibold hover:underline" type="button" onClick={() => setEditor(dish.id)}>{dish.name_it}</button>
             <ActionForm run={form => {
               if (form.get("operation") === "delete" && !window.confirm(`Eliminare «${dish.name_it}»?`)) return Promise.resolve();
-              return changeDish(restaurantId, dish.id, form);
+              return changeDish(restaurantId, dish.id, form, kind);
             }}>
               <div className="fields three">
                 <label>Prezzo (€)<PriceInput value={dish.price} /></label>
@@ -200,7 +207,7 @@ export function MenuBoard({ restaurantId, dishes, categories, allergens, options
         </section>;
       })}
       {!dishes.some(dish => (!categoryId || dish.category_id === categoryId) && (!status || dish.status === status)
-        && searchable(`${dish.name_it} ${dish.name_en ?? ""}`).includes(searchable(query))) && <p className="note">Nessun piatto da mostrare.</p>}
+        && searchable(`${dish.name_it} ${dish.name_en ?? ""}`).includes(searchable(query))) && <p className="note">Nessun {item} da mostrare.</p>}
     </section>
   </div>;
 }

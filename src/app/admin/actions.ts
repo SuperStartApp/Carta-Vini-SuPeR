@@ -132,6 +132,7 @@ export async function saveRestaurant(form: FormData) {
     const row = {
       name: required(form, "name", "Nome ristorante"), slug, logo_url: image(form, "logo_url"),
       primary_color: color, is_published: form.get("is_published") === "on",
+      cocktail_enabled: form.get("cocktail_enabled") === "on",
     };
     const table = db.from("swm_restaurants");
     const { data, error } = await (id ? table.update(row).eq("id", id) : table.insert(row)).select("id").single();

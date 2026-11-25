@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Circle, Cylinder, Droplets, Grape, Leaf, Search, Sparkles, Wine, WineOff } from "lucide-react";
 import type { Label } from "../lib/models";
-import type { PublicMenuCategory } from "../lib/menu";
+import type { PublicCocktailCategory, PublicMenuCategory } from "../lib/menu";
 import { searchable } from "../lib/search";
 import { emptyFilters, selectFilters, WineFilterPanel, type FilterOptions, type SelectFilter, type WineFilters } from "./public-wine-filters";
 import { PublicDishes } from "./public-dishes";
@@ -22,6 +22,7 @@ export type PublicMenu = {
   wine_categories: Label[];
   wines: PublicWine[];
   menu: PublicMenuCategory[];
+  cocktails?: PublicCocktailCategory[];
 };
 
 const copy = {
@@ -34,6 +35,7 @@ const copy = {
     tagline: "Un viaggio tra territori, vitigni e passioni.",
     close: "Chiudi", remove: "Rimuovi", findOption: "Cerca opzione", showWines: "Mostra vini",
     menu: "Menù", navigation: "Profilo del ristorante", backToDish: "Torna al piatto",
+    cocktail: "Cocktail", cocktailTagline: "L'arte di miscelare, il piacere di scoprire.",
   },
   en: {
     list: "Wine list", search: "Search the wine list", filter: "Filters", all: "All",
@@ -44,6 +46,7 @@ const copy = {
     tagline: "A journey through wine regions, grape varieties and passion.",
     close: "Close", remove: "Remove", findOption: "Find option", showWines: "Show wines",
     menu: "Menu", navigation: "Restaurant sections", backToDish: "Back to the dish",
+    cocktail: "Cocktail", cocktailTagline: "The art of mixing, the pleasure of discovery.",
   },
 };
 
@@ -157,8 +160,12 @@ function matchesFilters(wine: PublicWine, filters: WineFilters, ignore?: SelectF
 
 export function PublicWineList({ menu }: { menu: PublicMenu }) {
   const dishes = menu.menu ?? [];
+  const cocktails = menu.cocktails ?? [];
   const hasMenu = dishes.length > 0;
-  const [view, setView] = useState<"wine" | "menu">(hasMenu && !menu.wines.length ? "menu" : "wine");
+  const hasCocktails = cocktails.length > 0;
+  const [view, setView] = useState<"wine" | "menu" | "cocktail">(
+    menu.wines.length ? "wine" : hasMenu ? "menu" : hasCocktails ? "cocktail" : "wine",
+  );
   const [pairing, setPairing] = useState<{ wineId: string; dishId: string }>();
   const [destination, setDestination] = useState<{ id: string }>();
   const [lang, setLang] = useState<Language>("it");
@@ -235,14 +242,17 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
       <header className="public-header">
         <div className="public-logo">{logo ? <ExternalImage key={logo} url={logo} alt="" className="max-h-20 max-w-44 object-contain" fallback={brandIcon} /> : brandIcon}</div>
         <p>{menu.restaurant.name}</p>
-        <h1>{view === "menu" ? t.menu : t.list}</h1>
+        <h1>{view === "cocktail" ? "Cocktail List" : view === "menu" ? t.menu : t.list}</h1>
         <div className="boutique-ornament" aria-hidden="true"><Grape size={15} /></div>
-        <span className="boutique-tagline">{t.tagline}</span>
+        <span className="boutique-tagline">{view === "cocktail" ? t.cocktailTagline : t.tagline}</span>
       </header>
-      {hasMenu && <nav className="tabs public-section-tabs" aria-label={t.navigation}>
-        <button type="button" aria-pressed={view === "wine"} onClick={() => setView("wine")}>{t.list}</button>
-        <button type="button" aria-pressed={view === "menu"} onClick={() => { setPairing(undefined); setView("menu"); }}>{t.menu}</button>
+      {(hasMenu || hasCocktails) && <nav className="tabs public-section-tabs" aria-label={t.navigation}>
+        {(hasMenu || menu.wines.length > 0) && <button type="button" aria-pressed={view === "wine"} onClick={() => setView("wine")}>{t.list}</button>}
+        {hasMenu && <button type="button" aria-pressed={view === "menu"} onClick={() => { setPairing(undefined); setView("menu"); }}>{t.menu}</button>}
+        {hasCocktails && <button type="button" aria-pressed={view === "cocktail"} onClick={() => setView("cocktail")}>{t.cocktail}</button>}
       </nav>}
+      {hasCocktails && <div hidden={view !== "cocktail"}><PublicDishes kind="cocktail" lang={lang} money={money}
+        categories={cocktails.map(category => ({ ...category, dishes: category.cocktails }))} /></div>}
       {hasMenu && <div hidden={view !== "menu"}><PublicDishes categories={dishes} wines={menu.wines} lang={lang} money={money}
         onWine={(wine, dishId) => {
           if (!searched.some(result => result.id === wine.id)) setSearch("");
