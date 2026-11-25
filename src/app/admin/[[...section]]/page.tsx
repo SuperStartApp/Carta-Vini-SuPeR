@@ -4,6 +4,7 @@ import { BookOpen, Building2, Plus, Warehouse } from "lucide-react";
 import { ReferenceEditor, RestaurantForm } from "../../../components/admin-fields";
 import { AssignmentBoard, CatalogList, PublicLink } from "../../../components/admin-lists";
 import { WineEditor } from "../../../components/wine-editor";
+import { RestaurantMenu } from "../restaurant-menu";
 import { getReferences, getWines } from "../../../lib/data";
 import { referenceTitles, type Assignment, type Label, type ReferenceKind, type Restaurant, type Wine, type WineGrape } from "../../../lib/models";
 import { records, requireAdmin } from "../../../lib/supabase";
@@ -158,7 +159,7 @@ async function Restaurants({ id, query }: { id?: string; query: Query }) {
   const [row] = records<Restaurant>(await db.from("swm_restaurants").select("*").eq("id", id));
   if (!row) notFound();
   const tab = query.tab === "menu" || query.tab === "link" || query.tab === "impostazioni" ? query.tab : "carta";
-  if (tab === "menu") return <RestaurantCard row={row} tab={tab}><p className="panel">La gestione dei piatti è prevista nella prossima fase.</p></RestaurantCard>;
+  if (tab === "menu") return <RestaurantCard row={row} tab={tab}><RestaurantMenu id={id} /></RestaurantCard>;
   if (tab === "link") return <RestaurantCard row={row} tab={tab}><PublicLink path={`/r/${row.slug}`} published={row.is_published} /></RestaurantCard>;
   if (tab === "impostazioni") return <RestaurantCard row={row} tab={tab}><section className="panel"><RestaurantForm restaurant={row} /></section></RestaurantCard>;
   const [wines, refs, assignmentResult, orderResult] = await Promise.all([

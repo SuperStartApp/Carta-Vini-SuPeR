@@ -1,5 +1,12 @@
 # Stato del progetto
 
+## Fase 3 · 25 novembre 2026
+
+- Tab Menù operativo con schede piatto, categorie, allergeni e abbinamenti alla carta del ristorante. Il menù pubblico compare quando ci sono piatti disponibili e conserva la carta vini come vista iniziale quando presente.
+- Preparata la migrazione approvata `20261125000000_swm_save_dish.sql` per il salvataggio atomico. Applicazione al Supabase ufficiale a cura dell'amministratore.
+- Verificati in PostgreSQL isolato i 23 controlli iniziali, rollback completo, vincoli tra ristoranti, massimo due vini, prezzi correnti, sospensione e riattivazione, ordinamento ed esclusioni pubbliche.
+- Lint, TypeScript e build superati. Collaudo browser su PostgreSQL isolato con Auth/API simulate a 320, 360, 390, 412, 768 e 1280 px. Verificate creazione e modifica, allergeni, duplicazione, eliminazione, filtri di ricerca del pubblico, legenda, cambio lingua e navigazione dal piatto al vino e ritorno.
+
 ## Restyling Wine Boutique · 24 novembre 2026
 
 - Aggiornata la carta pubblica con identità avorio, schede vino, intestazione bilingue compatta, gerarchia geografica, tab con icone e filtri con conteggio e selezioni rimovibili.
@@ -36,5 +43,5 @@
 
 ## Prossimi passi
 
-1. Configurare manualmente Vercel per il collaudo di prova.
-2. Implementare la gestione dei piatti e il menù pubblico nella fase successiva.
+1. Applicare la migrazione della fase 3 e collaudare la creazione di piatti sul Supabase ufficiale.
+2. Pianificare il QR Code in una fase successiva.

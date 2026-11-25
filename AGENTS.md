@@ -16,3 +16,5 @@
 - Mantenere ESLint 9 per compatibilità con i plugin della configurazione Next.js.
 - Le due migrazioni della fase 2 sono applicate e verificate sul Supabase ufficiale condiviso. Registrare i cambiamenti allo schema in nuove migrazioni. Applicare migrazioni remote o cambiare impostazioni Auth globali solo con autorizzazione esplicita.
 - Il repository GitHub di riferimento è `SuperStartApp/Carta-Vini-SuPeR`, con branch `main`. Prima del push verificare i file in staging e mantenere `.env.local`, credenziali, chiavi e file generati fuori da Git. La configurazione di Vercel è a cura dell'amministratore.
+- Salvare piatti, allergeni e abbinamenti in una sola transazione tramite `swm_save_dish`. Limitare le associazioni alla carta del ristorante e leggere i prezzi pubblici dall'assegnazione corrente.
+- Se il piatto è privo di associazioni, omettere la sezione allergeni. Esporre la legenda bilingue e l'avvertenza sulle contaminazioni crociate senza dedurre allergeni dai testi.

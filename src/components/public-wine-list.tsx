@@ -1,14 +1,16 @@
 "use client";
 
-import { useCallback, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Circle, Cylinder, Droplets, Grape, Leaf, Search, Sparkles, Wine, WineOff } from "lucide-react";
 import type { Label } from "../lib/models";
+import type { PublicMenuCategory } from "../lib/menu";
 import { searchable } from "../lib/search";
-import { emptyFilters, WineFilterPanel, type FilterOptions, type SelectFilter, type WineFilters } from "./public-wine-filters";
+import { emptyFilters, selectFilters, WineFilterPanel, type FilterOptions, type SelectFilter, type WineFilters } from "./public-wine-filters";
+import { PublicDishes } from "./public-dishes";
+import { ExternalImage, safeImage, translated, type Language } from "./public-presentation";
 
-type Language = "it" | "en";
 type Named = { id: string; name: string };
-type PublicWine = {
+export type PublicWine = {
   id: string; name: string; category_id: string; winery: Named;
   country: Label & { code: string }; region: Label; bottle_price: number; glass_price?: number;
   image_url?: string; vintage?: number; volume_ml?: number; alcohol_pct?: number;
@@ -19,6 +21,7 @@ export type PublicMenu = {
   restaurant: { name: string; slug: string; logo_url?: string; primary_color: string };
   wine_categories: Label[];
   wines: PublicWine[];
+  menu: PublicMenuCategory[];
 };
 
 const copy = {
@@ -30,6 +33,7 @@ const copy = {
     grapes: "Vitigni", nose: "Olfatto", palate: "Gusto", from: "Da", under: "Meno di", language: "Lingua",
     tagline: "Un viaggio tra territori, vitigni e passioni.",
     close: "Chiudi", remove: "Rimuovi", findOption: "Cerca opzione", showWines: "Mostra vini",
+    menu: "Menù", navigation: "Profilo del ristorante", backToDish: "Torna al piatto",
   },
   en: {
     list: "Wine list", search: "Search the wine list", filter: "Filters", all: "All",
@@ -39,12 +43,9 @@ const copy = {
     grapes: "Grapes", nose: "Nose", palate: "Palate", from: "From", under: "Under", language: "Language",
     tagline: "A journey through wine regions, grape varieties and passion.",
     close: "Close", remove: "Remove", findOption: "Find option", showWines: "Show wines",
+    menu: "Menu", navigation: "Restaurant sections", backToDish: "Back to the dish",
   },
 };
-
-function translated(italian: string | undefined, english: string | null | undefined, lang: Language) {
-  return (lang === "en" ? english?.trim() : undefined) || italian?.trim() || "";
-}
 
 function label(item: Label, lang: Language) {
   return translated(item.name_it, item.name_en, lang);
@@ -83,10 +84,6 @@ function categoryIcon(category: Label) {
   return Circle;
 }
 
-function safeImage(url?: string) {
-  return url && /^https?:\/\/[^\s]+$/i.test(url) ? url : undefined;
-}
-
 function accentColors(hex: string) {
   const rgb = [1, 3, 5].map(index => parseInt(hex.slice(index, index + 2), 16));
   const luminance = (channels: number[]) => channels.reduce((total, channel, index) => {
@@ -107,7 +104,7 @@ function accentColors(hex: string) {
   } as CSSProperties;
 }
 
-function WineRow({ wine, lang, money }: { wine: PublicWine; lang: Language; money: Intl.NumberFormat }) {
+function WineRow({ wine, lang, money, onBack }: { wine: PublicWine; lang: Language; money: Intl.NumberFormat; onBack?: () => void }) {
   const t = copy[lang];
   const nose = translated(wine.nose_it, wine.nose_en, lang);
   const palate = translated(wine.palate_it, wine.palate_en, lang);
@@ -127,7 +124,7 @@ function WineRow({ wine, lang, money }: { wine: PublicWine; lang: Language; mone
     { title: t.nose, value: nose, Icon: Leaf },
     { title: t.palate, value: palate, Icon: Droplets },
   ].filter(note => note.value);
-  return <article className="wine-row">
+  return <article className="wine-row" id={`wine-${wine.id}`} tabIndex={-1}>
     {image && <ExternalImage key={image} url={image} alt={wine.name} className="wine-image" />}
     <div className="wine-info">
       <h5 className="wine-name">{wine.name}</h5>
@@ -139,18 +136,9 @@ function WineRow({ wine, lang, money }: { wine: PublicWine; lang: Language; mone
       {notes.length > 0 && <dl className="wine-notes">{notes.map(({ title, value, Icon }) =>
         <div key={title}><dt><Icon size={13} aria-hidden="true" />{title}</dt><dd>{value}</dd></div>,
       )}</dl>}
+      {onBack && <button className="boutique-filter-button mt-3" type="button" onClick={onBack}>{t.backToDish}</button>}
     </div>
   </article>;
-}
-
-function ExternalImage({ url, alt, className, fallback }: { url: string; alt: string; className: string; fallback?: React.ReactNode }) {
-  const [failed, setFailed] = useState(false);
-  const detectFailedLoad = useCallback((image: HTMLImageElement | null) => {
-    if (image?.complete && image.naturalWidth === 0) setFailed(true);
-  }, []);
-  if (failed) return fallback ?? null;
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img ref={detectFailedLoad} src={url} alt={alt} className={className} loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} />;
 }
 
 function priceBand(price: number) {
@@ -168,12 +156,23 @@ function matchesFilters(wine: PublicWine, filters: WineFilters, ignore?: SelectF
 }
 
 export function PublicWineList({ menu }: { menu: PublicMenu }) {
+  const dishes = menu.menu ?? [];
+  const hasMenu = dishes.length > 0;
+  const [view, setView] = useState<"wine" | "menu">(hasMenu && !menu.wines.length ? "menu" : "wine");
+  const [pairing, setPairing] = useState<{ wineId: string; dishId: string }>();
+  const [destination, setDestination] = useState<{ id: string }>();
   const [lang, setLang] = useState<Language>("it");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [filters, setFilters] = useState(emptyFilters);
   const tabsRef = useRef<HTMLElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!destination) return;
+    const target = document.getElementById(destination.id);
+    target?.focus({ preventScroll: true });
+    target?.scrollIntoView({ block: "start" });
+  }, [destination]);
   const t = copy[lang];
   const money = new Intl.NumberFormat(lang === "it" ? "it-IT" : "en-IE", { style: "currency", currency: "EUR" });
   const query = searchable(search);
@@ -236,10 +235,28 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
       <header className="public-header">
         <div className="public-logo">{logo ? <ExternalImage key={logo} url={logo} alt="" className="max-h-20 max-w-44 object-contain" fallback={brandIcon} /> : brandIcon}</div>
         <p>{menu.restaurant.name}</p>
-        <h1>{t.list}</h1>
+        <h1>{view === "menu" ? t.menu : t.list}</h1>
         <div className="boutique-ornament" aria-hidden="true"><Grape size={15} /></div>
         <span className="boutique-tagline">{t.tagline}</span>
       </header>
+      {hasMenu && <nav className="tabs public-section-tabs" aria-label={t.navigation}>
+        <button type="button" aria-pressed={view === "wine"} onClick={() => setView("wine")}>{t.list}</button>
+        <button type="button" aria-pressed={view === "menu"} onClick={() => { setPairing(undefined); setView("menu"); }}>{t.menu}</button>
+      </nav>}
+      {hasMenu && <div hidden={view !== "menu"}><PublicDishes categories={dishes} wines={menu.wines} lang={lang} money={money}
+        onWine={(wine, dishId) => {
+          if (!searched.some(result => result.id === wine.id)) setSearch("");
+          setFilters(current => {
+            const compatible = { ...emptyFilters, glass: current.glass && wine.glass_price != null };
+            for (const key of selectFilters) {
+              if (matchesFilters(wine, { ...emptyFilters, [key]: current[key] })) compatible[key] = current[key];
+            }
+            return compatible;
+          });
+          setCategory(wine.category_id);
+          setPairing({ wineId: wine.id, dishId }); setView("wine"); setDestination({ id: `wine-${wine.id}` });
+        }} /></div>}
+      <div hidden={view !== "wine"}>
       {menu.wines.length > 0 && <>
         <div className="public-tools">
           <label className="search-public"><Search size={18} aria-hidden="true" />
@@ -264,10 +281,14 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
           <h3>{region.label}</h3>
           {[...region.wineries].map(([wineryId, winery]) => <section className="winery-group" key={wineryId}>
             <h4>{winery.label}</h4>
-            {winery.wines.map(wine => <WineRow key={wine.id} wine={wine} lang={lang} money={money} />)}
+            {winery.wines.map(wine => <WineRow key={wine.id} wine={wine} lang={lang} money={money}
+              onBack={pairing?.wineId === wine.id ? () => {
+                setView("menu"); setDestination({ id: `dish-${pairing.dishId}` }); setPairing(undefined);
+              } : undefined} />)}
           </section>)}
         </section>)}
       </section>)}</div>
+      </div>
       <footer className="boutique-footer" lang="en">Powered by SuPeR Wine &amp; Menu</footer>
     </div>
   </main>;

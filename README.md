@@ -32,6 +32,8 @@ Riavviare Next.js dopo la modifica. Il file è ignorato da Git. Usare soltanto l
 
 L'amministratore ha applicato e verificato entrambe le migrazioni sul Supabase ufficiale. La [migrazione iniziale](supabase/migrations/20261124000000_swm_initial.sql) ha superato i [23 controlli post-installazione](supabase/verify/20261124000000_swm_initial.sql). La [migrazione della fase 2](supabase/migrations/20261124000001_swm_save_wine.sql) aggiunge il salvataggio transazionale della scheda vino con vitigni e affinamenti, collaudato nel flusso reale.
 
+Per abilitare il salvataggio e la duplicazione dei piatti sul Supabase ufficiale, l'amministratore deve applicare la [migrazione della fase 3](supabase/migrations/20261125000000_swm_save_dish.sql) nel SQL Editor. La migrazione crea la funzione transazionale `swm_save_dish` con i permessi del chiamante. I piatti disponibili appaiono nel Menù pubblico dello stesso link del ristorante.
+
 ### Configurare l'account SuPeR
 
 1. In **Authentication → Users**, creare o individuare l'utente SuPeR. Per un nuovo utente con password, usare **Add user → Create new user**, inserire l'email e la password e confermare l'email secondo il flusso amministrativo del progetto.

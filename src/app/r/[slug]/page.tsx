@@ -12,6 +12,5 @@ export default async function RestaurantWineList({ params }: { params: Promise<{
   const { data, error } = await db.rpc("swm_public_menu", { restaurant_slug: slug });
   if (error) return <main className="public-wrap public-empty"><h1>Carta vini temporaneamente non disponibile</h1></main>;
   if (!data) notFound();
-  const { restaurant, wine_categories, wines } = data as PublicMenu;
-  return <PublicWineList menu={{ restaurant, wine_categories, wines }} />;
+  return <PublicWineList menu={data as PublicMenu} />;
 }
