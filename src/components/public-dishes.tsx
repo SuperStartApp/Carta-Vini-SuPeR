@@ -87,8 +87,10 @@ export function PublicDishes({ categories, wines, lang, money, onWine }: {
             {dish.allergens.length > 0 && <section className="mt-3" aria-label={t.allergens}>
               <h4>{t.allergens}</h4>
               <div className="dish-allergens">{dish.allergens.map(allergen => <button key={allergen.id} type="button"
+                aria-label={`${allergen.id}. ${text(allergen, lang)}`}
                 aria-haspopup="dialog" onClick={event => open([allergen], false, event.currentTarget)}>
-                <AllergenIcon id={allergen.id} />{allergen.id}. {text(allergen, lang)}
+                <AllergenIcon id={allergen.id} />
+                <span aria-hidden="true">{allergen.id}</span>
               </button>)}</div>
             </section>}
             {pairs.length > 0 && <section className="dish-pairings">

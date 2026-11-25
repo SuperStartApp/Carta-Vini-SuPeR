@@ -168,7 +168,12 @@ body {
   .dish-card h4 { @apply mb-1.5 text-sm font-semibold; color: var(--accent-ink); }
   .dish-description { @apply mt-2 whitespace-pre-line text-neutral-700; }
   .dish-allergens { @apply flex flex-wrap gap-2; }
-  .dish-allergens button { @apply flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-sm text-left; border-color: var(--accent-line); color: var(--accent-ink); }
+  .dish-allergens button {
+    @apply inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center gap-1 rounded-full border px-2 text-sm font-semibold tabular-nums;
+    border-color: var(--accent-line);
+    background: var(--accent-wash);
+    color: var(--accent-ink);
+  }
   .dish-pairings { @apply mt-3 border-t pt-3; border-color: var(--accent-line); }
   .dish-pairings ul { @apply grid gap-2 sm:grid-cols-2; }
   .dish-pairings button { @apply flex h-full w-full items-center gap-2 rounded-lg p-2 text-left text-sm; background: var(--accent-wash); color: var(--accent-ink); }

@@ -1,5 +1,10 @@
 # Stato del progetto
 
+## Fase 3.1 · 25 novembre 2026
+
+- Nel menù pubblico gli allergeni occupano pulsanti compatti con icona e numero, colore del ristorante e area di tocco di almeno 44 × 44 px. La denominazione completa resta disponibile come nome accessibile e nel dialogo bilingue, insieme alla descrizione. Legenda generale e avvertenza restano visibili.
+- Lint, TypeScript e build superati. In Chrome, con risposta RPC simulata, verificati 1, 2, 6 e 14 allergeni a 320, 360, 390, 412, 768 e 1280 px, con ritorno a capo su mobile, apertura touch, uso da tastiera e ritorno del focus.
+
 ## Fase 3 · 25 novembre 2026
 
 - Tab Menù operativo con schede piatto, categorie, allergeni e abbinamenti alla carta del ristorante. Il menù pubblico compare quando ci sono piatti disponibili e conserva la carta vini come vista iniziale quando presente.
