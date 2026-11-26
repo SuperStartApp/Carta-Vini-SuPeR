@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { Plus, X } from "lucide-react";
-import { saveReference, saveWine } from "../app/admin/actions";
+import { deleteWine, saveReference, saveWine } from "../app/admin/actions";
 import type { ReferenceKind, References, Restaurant, Wine, WineGrape, WineMetadata } from "../lib/models";
 import { ActionForm } from "./action-form";
 import { ImageField, ReferenceFields, ReferenceTitle, RegionOptions } from "./admin-fields";
@@ -33,8 +33,19 @@ export function WineEditor({ initial, metadata, wine, initialGrapes, initialAgin
   const [quick, setQuick] = useState<ReferenceKind>();
   const [bottle, setBottle] = useState("");
   const [glass, setGlass] = useState("");
+  const [duplicate, setDuplicate] = useState<{ duplicates: { id: string; name: string }[]; confirmation: string }>();
+  const [deleting, setDeleting] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [dependencies, setDependencies] = useState<{ id: string; name: string; dishes: { id: string; name: string }[] }[]>([]);
   const draft = useAdminList();
-  const markDirty = () => draft.reportDirty("wine", true);
+  const markDirty = () => {
+    draft.reportDirty("wine", true);
+    setDuplicate(undefined);
+  };
+  function reportPending(operation: "wine" | "delete", pending: boolean) {
+    draft.reportPending(operation, pending);
+    setBusy(pending);
+  }
   const dialog = useRef<HTMLDialogElement>(null);
   const wineryId = refs.wineries.find(w => normalize(w.name) === normalize(wineryText))?.id ?? "";
   const quickButton = (kind: ReferenceKind, label: string) =>
@@ -47,9 +58,14 @@ export function WineEditor({ initial, metadata, wine, initialGrapes, initialAgin
     <div onChange={markDirty}>
     <ActionForm run={async form => {
       const result = await saveWine(form);
+      if ("confirmation" in result && result.confirmation) {
+        setDuplicate({ confirmation: result.confirmation, duplicates: result.duplicates });
+        return;
+      }
+      setDuplicate(undefined);
       if ("success" in result) draft.reportDirty("wine", false);
       return result;
-    }} className="panel" onPendingChange={pending => draft.reportPending("wine", pending)}>
+    }} className="panel" onPendingChange={pending => reportPending("wine", pending)}>
       {wine && <input type="hidden" name="id" value={wine.id} />}
       <div className="fields">
         <label>Nome vino<input name="name" defaultValue={wine?.name} required /></label>
@@ -162,13 +178,46 @@ export function WineEditor({ initial, metadata, wine, initialGrapes, initialAgin
             onSelectionChange={markDirty} />
         </div>
       </details>}
+      {duplicate && <div className="rounded-lg border border-line p-3">
+        <p className="note" role="alert">Possibile duplicato. Cantina, nome, annata e formato coincidono con queste schede.</p>
+        <ul className="my-2 grid gap-1">
+          {duplicate.duplicates.map(match => <li key={match.id}>
+            <Link href={`/admin/vini/${match.id}`} target="_blank" rel="noopener noreferrer" className="text-sm underline">
+              Apri {match.name} in una nuova scheda
+            </Link>
+          </li>)}
+        </ul>
+      </div>}
       <div className="flex flex-wrap gap-2">
-        <button className="primary">{wine ? "Salva modifiche" : "Salva vino"}</button>
+        <button className="primary" disabled={busy}>{wine ? "Salva modifiche" : "Salva vino"}</button>
+        {duplicate && <button className="secondary" disabled={busy} name="confirm_duplicate" value={duplicate.confirmation}>Salva comunque</button>}
         {wine && <Link href="/admin/vini/nuovo" className="secondary"><Plus size={16} /> Nuovo vino</Link>}
         <Link href="/admin/vini" scroll={false} className="secondary">Torna al catalogo</Link>
       </div>
     </ActionForm>
     </div>
+    {wine && <section className="mt-6 border-t border-line pt-4">
+      <button type="button" className="secondary compact text-bordeaux" aria-expanded={deleting} disabled={busy}
+        onClick={() => { setDeleting(!deleting); setDependencies([]); }}>Elimina vino</button>
+      {deleting && <ActionForm className="mt-3 max-w-xl" onPendingChange={pending => reportPending("delete", pending)} run={async form => {
+        const result = await deleteWine(wine.id, form);
+        setDependencies("dependencies" in result ? result.dependencies : []);
+        return result;
+      }}>
+        <p className="note">L’eliminazione dal catalogo è definitiva. Le assegnazioni e gli abbinamenti esistenti bloccano l’operazione.</p>
+        <label className="check-field"><input name="confirm_delete" type="checkbox" required />
+          Confermo l’eliminazione del vino «{wine.name}».</label>
+        <button className="secondary compact justify-self-start text-bordeaux" disabled={busy}>Conferma eliminazione</button>
+        {dependencies.length > 0 && <ul className="grid gap-2 text-sm" aria-label="Ristoranti e abbinamenti interessati">
+          {dependencies.map(restaurant => <li key={restaurant.id}>
+            <Link href={`/admin/ristoranti/${restaurant.id}`} target="_blank" rel="noopener noreferrer" className="underline">{restaurant.name}</Link>
+            {restaurant.dishes.length > 0 && <ul className="ml-5 list-disc">
+              {restaurant.dishes.map(dish => <li key={dish.id}>{dish.name}</li>)}
+            </ul>}
+          </li>)}
+        </ul>}
+      </ActionForm>}
+    </section>}
     <dialog ref={dialog} className="panel m-auto w-[min(92vw,34rem)] backdrop:bg-black/30"
       aria-labelledby="quick-title" onClose={() => setQuick(undefined)}>
       {quick && <>

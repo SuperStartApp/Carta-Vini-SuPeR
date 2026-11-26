@@ -1,5 +1,12 @@
 # Stato del progetto
 
+## Fase 4.9 · Integrità del catalogo vini
+
+- Collaudo locale approvato e pubblicazione su `main` autorizzata. Eliminazione definitiva con conferma esplicita e riepilogo di ristoranti e piatti in caso di blocco. Controllo dei possibili duplicati in creazione e modifica con apertura della scheda esistente e conferma volontaria.
+- In PostgreSQL isolato verificati i vincoli del catalogo e il blocco per vini assegnati o abbinati, anche se sospesi. Per il vino libero, rimosse solo scheda e relazioni tecniche. Prezzi, disponibilità e abbinamenti delle schede protette verificati.
+- In Chrome con API simulate verificati login, avviso con nome normalizzato, esclusione della scheda corrente, annate e formati diversi, conferma, eliminazione e ricerca. Lint, typecheck e build superati. La fase riusa lo schema esistente e non richiede migrazioni.
+- Limite noto non bloccante. Due inserimenti simultanei possono superare il controllo duplicati. Eventuali eliminazioni in produzione sono effettuate manualmente dall'amministratore.
+
 ## Fase 4.8 · SuPeR Social & Contact
 
 - Completata in produzione con il rilascio `0afe623`. Deploy Vercel riuscito e controllo in sola lettura su Enoteca Wine Art, Enosteria del Gallo e Ristorante Virgilio Campo de' Fiori. Tutte le carte hanno risposto HTTP 200 sul dominio canonico. Verificati il footer, le tre destinazioni di contatto, le etichette IT/EN e l'assenza del link Instagram quando il campo è vuoto.

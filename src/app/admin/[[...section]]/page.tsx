@@ -50,7 +50,9 @@ async function Wines({ id, query }: { id?: string; query: Query }) {
     const [wines, refs, appellations, restaurants, assignments] = await Promise.all([
       getWines(), getReferences(), getAppellations(), getAssignmentRestaurants(), getCatalogAssignments(),
     ]);
-    return <><Heading title="Catalogo vini" /><CatalogList wines={wines} refs={refs} appellations={appellations}
+    return <><Heading title="Catalogo vini" />
+      {query.eliminato === "1" && <p role="status" className="note mb-3">Vino eliminato dal catalogo.</p>}
+      <CatalogList wines={wines} refs={refs} appellations={appellations}
       restaurants={restaurants} assignments={assignments} /></>;
   }
   const { db } = await requireAdmin();

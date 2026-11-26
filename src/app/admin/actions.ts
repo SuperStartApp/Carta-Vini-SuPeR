@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { referenceTables, statuses, type ReferenceKind, type Status } from "../../lib/models";
 import { requireAdmin } from "../../lib/supabase";
+import { getAdminRows } from "../../lib/data";
+import { searchable } from "../../lib/search";
+
+const normalizedWineName = (name: string) => searchable(name).replace(/\s+/g, " ");
 import { instagramProfileUrl } from "../../lib/instagram-url";
 
 function value(form: FormData, key: string) {
@@ -123,6 +127,19 @@ export async function saveWine(form: FormData) {
     };
     const rows = restaurantAssignments(form);
     if (rows.length && id) throw new Error("Usa Assegna ai ristoranti per un vino già a catalogo.");
+    const candidates = await getAdminRows<{ id: string; name: string }>((start, end) => {
+      let query = db.from("swm_wines").select("id,name").eq("winery_id", wine.winery_id);
+      query = wine.vintage === null ? query.is("vintage", null) : query.eq("vintage", wine.vintage);
+      query = wine.volume_ml === null ? query.is("volume_ml", null) : query.eq("volume_ml", wine.volume_ml);
+      if (id) query = query.neq("id", id);
+      return query.order("id").range(start, end);
+    });
+    const name = normalizedWineName(wine.name);
+    const duplicates = candidates.filter(candidate => normalizedWineName(candidate.name) === name);
+    if (duplicates.length) {
+      const confirmation = JSON.stringify([id, wine.winery_id, name, wine.vintage, wine.volume_ml, duplicates.map(row => row.id)]);
+      if (form.get("confirm_duplicate") !== confirmation) return { duplicates, confirmation };
+    }
     const { data, error, status } = await (rows.length
       ? db.rpc("swm_save_wine_with_assignments", { ...args, assignments: rows }).retry(false)
       : db.rpc("swm_save_wine", args).retry(false));
@@ -139,6 +156,42 @@ export async function saveWine(form: FormData) {
   revalidatePath("/admin", "layout");
   if (optional(form, "id")) return { success: "Scheda vino salvata." };
   redirect(`/admin/vini/${savedId}?salvato=1${assignedCount ? `&assegnati=${assignedCount}` : ""}`);
+}
+
+export async function deleteWine(id: string, form: FormData) {
+  const { db } = await requireAdmin();
+  if (form.get("confirm_delete") !== "on") return { error: "Conferma l’eliminazione definitiva." };
+  try {
+    // La FK verso il catalogo blocca il DELETE anche se arriva una nuova assegnazione concorrente.
+    const { data, error } = await db.from("swm_wines").delete().eq("id", id).select("id").maybeSingle();
+    if (error?.code === "23503") {
+      const [assignments, pairings] = await Promise.all([
+        getAdminRows<{ restaurant_id: string; restaurant: { name: string } | null }>((start, end) =>
+          db.from("swm_restaurant_wines").select("restaurant_id,restaurant:swm_restaurants(name)")
+            .eq("wine_id", id).order("restaurant_id").range(start, end)),
+        getAdminRows<{ restaurant_id: string; dish_id: string; dish: { name_it: string } | null }>((start, end) =>
+          db.from("swm_dish_pairings").select("restaurant_id,dish_id,dish:swm_dishes(name_it)")
+            .eq("wine_id", id).order("restaurant_id").order("dish_id").range(start, end)),
+      ]);
+      const dishesByRestaurant = new Map<string, { id: string; name: string }[]>();
+      for (const pairing of pairings) {
+        const dishes = dishesByRestaurant.get(pairing.restaurant_id) ?? [];
+        dishes.push({ id: pairing.dish_id, name: pairing.dish?.name_it ?? "Piatto abbinato" });
+        dishesByRestaurant.set(pairing.restaurant_id, dishes);
+      }
+      return {
+        error: "Eliminazione bloccata. Il vino è ancora referenziato nel database.",
+        dependencies: assignments.map(row => ({
+          id: row.restaurant_id, name: row.restaurant?.name ?? "Ristorante",
+          dishes: dishesByRestaurant.get(row.restaurant_id) ?? [],
+        })),
+      };
+    }
+    check(error);
+    if (!data) return { error: "Vino non trovato. Ricarica il catalogo." };
+  } catch (error) { return message(error); }
+  revalidatePath("/admin", "layout");
+  redirect("/admin/vini?eliminato=1");
 }
 
 export async function saveRestaurant(form: FormData) {

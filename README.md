@@ -37,6 +37,14 @@ Entrambi i file contengono lo stesso URL HTTPS canonico usato dal gestionale, co
 
 Il collaudo manuale è approvato, incluse la scansione da smartphone, l'apertura della carta sul dominio ufficiale da rete mobile e il download. Gli artefatti e i ristoranti dimostrativi appartengono al solo ambiente isolato di collaudo.
 
+## Integrità del catalogo vini
+
+Nel catalogo, aprire la scheda del vino e usare **Elimina vino** in fondo alla pagina. Confermare l'eliminazione definitiva. Se una carta o un abbinamento usa il vino, il gestionale blocca l'operazione e indica i ristoranti e i piatti coinvolti.
+
+Al salvataggio, l'avviso duplicati mostra le schede con stessa cantina, nome normalizzato, annata e formato. Si può aprire una scheda corrispondente o scegliere **Salva comunque**. La fase 4.9 riusa i vincoli del database esistente e non richiede migrazioni.
+
+Limite noto non bloccante. Due inserimenti simultanei possono terminare prima che il controllo rilevi la scheda concorrente. Le eventuali eliminazioni sul catalogo ufficiale sono manuali e riservate all'amministratore.
+
 ## SuPeR Social & Contact
 
 Il footer pubblico offre i contatti istituzionali SuPeR tramite WhatsApp, telefono ed email. Per aggiungere Instagram, aprire **Ristoranti → Impostazioni → Social network**, inserire l'URL HTTPS del profilo e salvare. Per rimuoverlo, svuotare il campo e salvare. Il collegamento compare sopra il footer in tutte le sezioni pubbliche.
