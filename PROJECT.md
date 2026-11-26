@@ -24,7 +24,13 @@ Drink List riusa la gestione delle categorie, la scheda di inserimento e la pres
 
 L'amministratore ha applicato la migrazione originaria Cocktail List al Supabase ufficiale e confermato 10/10 controlli post-installazione. Ha poi applicato e verificato la migrazione 4.1, che aggiorna il solo modello nella funzione `swm_init_cocktail_categories`. I nomi SQL, il flag `cocktail_enabled` e la chiave RPC `cocktails` conservano il riferimento storico ai cocktail.
 
-`publicRestaurantUrl` costruisce sul server l'indirizzo completo del ristorante tramite `NEXT_PUBLIC_APP_URL` e lo slug esistente. Copia e apertura condividono lo stesso URL. La funzione è il punto di riuso previsto per i futuri QR Code.
+`publicRestaurantUrl` costruisce sul server l'indirizzo completo del ristorante tramite `NEXT_PUBLIC_APP_URL` e lo slug esistente. Copia, apertura e QR Studio condividono lo stesso URL. QR Studio accetta come origine di stampa esclusivamente `https://menu.cartavinidigitale.it`.
+
+QR Studio legge la pubblicabilità dei contenuti da `swm_public_menu` e costruisce la matrice localmente con `qrcode` e correzione Q. Anteprima, SVG autonomo e PNG da 2048 × 2048 px riusano la stessa matrice. Il PNG usa moduli interi e tutti i formati mantengono un margine bianco di almeno quattro moduli. Gli export sono disponibili con contenuti pubblici verificati. La soglia di contrasto del colore personalizzato è 7:1 sul bianco.
+
+Il salvataggio verifica lo slug e lo stato di pubblicazione correnti prima dell'aggiornamento e usa entrambi come condizioni contro modifiche concorrenti. Lo slug pubblicato è bloccato. La modifica di una bozza esistente richiede conferma perché lo schema non conserva la cronologia di pubblicazione. Il QR codifica direttamente l'URL della carta. Eventuali statistiche future potranno usare la visita a quell'URL.
+
+Il collaudo manuale di QR Studio è approvato. La prossima fase, **SuPeR Wine Intelligence**, riguarda la raccolta delle statistiche, la dashboard analitica e la reportistica professionale. L'avvio è subordinato al documento di progettazione dell'utente. I QR stampati continueranno a puntare agli stessi URL canonici.
 
 La fase 4.2 aggiunge al vino di catalogo una denominazione facoltativa e una specificazione libera con suggerimenti dal catalogo. Le caratteristiche bilingui sono facoltative, indipendenti dalla categoria e combinabili. `swm_appellations` normalizza le classificazioni per unicità. `swm_wine_characteristics` e `swm_wine_characteristic_links` consentono di riusare le stesse caratteristiche tra vini. Anfora usa l'anagrafica Affinamenti.
 

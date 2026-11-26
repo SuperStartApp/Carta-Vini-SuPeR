@@ -275,11 +275,17 @@ export function AssignmentBoard({ restaurantId, wines, assignments, refs, catego
 }
 
 export function PublicLink({ url, published }: { url: string | null; published: boolean }) {
-  const [copyResult, setCopyResult] = useState<"copied" | "manual">();
   if (!url) return <p className="panel error">Link pubblico non configurato. Verifica NEXT_PUBLIC_APP_URL.</p>;
 
   return <div className="panel grid gap-4">
     <p className="note">{published ? "Carta pubblicata" : "Ristorante in bozza. Pubblicalo dalle impostazioni per attivare il link."}</p>
+    <PublicLinkActions url={url} published={published} />
+  </div>;
+}
+
+export function PublicLinkActions({ url, published }: { url: string; published: boolean }) {
+  const [copyResult, setCopyResult] = useState<"copied" | "manual">();
+  return <>
     <code className="break-all select-all">{url}</code>
     <div className="flex gap-2 flex-wrap">
       <button type="button" className="secondary" onClick={async () => {
@@ -293,5 +299,5 @@ export function PublicLink({ url, published }: { url: string | null; published: 
       {published && <a href={url} target="_blank" rel="noopener noreferrer" className="primary"><ExternalLink size={16} /> Apri carta pubblica</a>}
     </div>
     {copyResult === "manual" && <p className="note" role="status">Copia il link selezionando l’indirizzo qui sopra.</p>}
-  </div>;
+  </>;
 }

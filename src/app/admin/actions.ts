@@ -157,9 +157,22 @@ export async function saveRestaurant(form: FormData) {
       cocktail_enabled: form.get("cocktail_enabled") === "on",
     };
     const table = db.from("swm_restaurants");
-    const { data, error } = await (id ? table.update(row).eq("id", id) : table.insert(row)).select("id").single();
+    let previous: { slug: string; is_published: boolean } | undefined;
+    if (id) {
+      const { data: current, error: readError } = await table.select("slug,is_published").eq("id", id).maybeSingle();
+      check(readError);
+      if (!current) throw new Error("Ristorante non trovato.");
+      if (current.slug !== slug) {
+        if (current.is_published) throw new Error("Lo slug è bloccato per i ristoranti pubblicati perché la modifica può invalidare i QR già stampati.");
+        if (form.get("confirm_slug_change") !== "on") throw new Error("Conferma il rischio per i QR prima di modificare lo slug.");
+      }
+      previous = current;
+    }
+    const { data, error } = id && previous
+      ? await table.update(row).eq("id", id).eq("slug", previous.slug).eq("is_published", previous.is_published).select("id").maybeSingle()
+      : await table.insert(row).select("id").single();
     check(error);
-    if (!data) throw new Error("Ristorante non trovato.");
+    if (!data) throw new Error("Il ristorante è cambiato nel frattempo. Ricarica la pagina e riprova.");
     savedId = data.id;
   } catch (error) { return message(error); }
   revalidatePath("/admin", "layout");

@@ -29,6 +29,14 @@ Dopo la creazione di un vino, piatto o drink, la scheda resta aperta per le modi
 
 La valutazione grafica e funzionale è approvata, incluse le immagini negli abbinamenti. Gli artefatti del collaudo isolato sono nella cartella ignorata supabase/.temp. Il deploy usa le variabili Supabase e l'origine canonica configurate su Vercel. La fase non richiede migrazioni.
 
+## SuPeR QR Studio
+
+Nella scheda del ristorante, aprire **SuPeR QR Studio** per copiare il link ufficiale e scaricare il QR come PNG da 2048 × 2048 px o SVG vettoriale. Gli export richiedono un ristorante pubblicato con contenuti e `NEXT_PUBLIC_APP_URL=https://menu.cartavinidigitale.it`. Il nero è selezionato per impostazione predefinita. Il colore del ristorante è utilizzabile con contrasto di almeno 7:1 sul bianco.
+
+Entrambi i file contengono lo stesso URL HTTPS canonico usato dal gestionale, con correzione Q e almeno quattro moduli di margine bianco. Conservare il margine nell'impaginato. Lo slug dei ristoranti pubblicati è bloccato anche sul server. Per rinominare una bozza esistente occorre confermare il rischio per i QR già stampati.
+
+Il collaudo manuale è approvato, incluse la scansione da smartphone, l'apertura della carta sul dominio ufficiale da rete mobile e il download. Gli artefatti e i ristoranti dimostrativi appartengono al solo ambiente isolato di collaudo.
+
 ## Supabase
 
 Se manca `.env.local`, creare il file copiando `.env.example`. Nel progetto Supabase ufficiale aprire **Connect** oppure **Settings → API Keys** e compilare:
@@ -88,7 +96,7 @@ Il flusso amministrativo e la pubblicazione sono stati collaudati con [Enoteca W
 Importare [Carta-Vini-SuPeR](https://github.com/SuperStartApp/Carta-Vini-SuPeR) con preset **Next.js**, branch `main` e Node.js 24. In **Settings → Environment Variables** impostare:
 
 - `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` dello stesso progetto Supabase.
-- `NEXT_PUBLIC_APP_URL=https://carta-vini-super.vercel.app` in **Production**. Per generare link anche dalle build **Preview**, impostare lo stesso dominio pubblico nell'ambiente Preview.
+- `NEXT_PUBLIC_APP_URL=https://menu.cartavinidigitale.it` in **Production** per abilitare QR Studio, dopo aver verificato che il dominio serva le carte pubbliche. Impostare lo stesso dominio pubblico nell'ambiente **Preview** se si vogliono generare link canonici dalle build di anteprima.
 
 L'URL pubblico in produzione deve essere un'origine HTTPS stabile, con eventuale slash finale. Se manca o è invalido, il tab **Link pubblico** mostra l'errore di configurazione e rende indisponibili le due azioni. La variabile si applica ai nuovi deploy. [Ambienti Vercel e variabili](https://vercel.com/docs/environment-variables)
 

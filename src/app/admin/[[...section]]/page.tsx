@@ -4,11 +4,14 @@ import { BookOpen, Building2, Plus, Warehouse } from "lucide-react";
 import { ReferenceEditor, RestaurantForm } from "../../../components/admin-fields";
 import { AssignmentBoard, CatalogList, PublicLink } from "../../../components/admin-lists";
 import { WineEditor } from "../../../components/wine-editor";
+import { RestaurantQrStudio } from "../../../components/restaurant-qr-studio";
 import { RestaurantMenu } from "../restaurant-menu";
 import { publicRestaurantUrl } from "../../../lib/public-restaurant-url";
+import { restaurantQrMatrix, restaurantQrUrl } from "../../../lib/restaurant-qr";
+import type { PublicMenu } from "../../../components/public-wine-list";
 import { getAdminRows, getAppellations, getAssignmentRestaurants, getCatalogAssignments, getReferences, getWineMetadata, getWines } from "../../../lib/data";
 import { referenceTitles, type Assignment, type Label, type ReferenceKind, type Restaurant, type Wine, type WineGrape } from "../../../lib/models";
-import { records, requireAdmin } from "../../../lib/supabase";
+import { publicClient, records, requireAdmin } from "../../../lib/supabase";
 
 type Query = Record<string, string | string[] | undefined>;
 const referenceKinds = ["categories", "countries", "regions", "grapes", "aging"] as const;
@@ -145,7 +148,8 @@ async function ReferencePage({ query }: { query: Query }) {
 }
 
 function RestaurantCard({ row, tab, children }: { row: Restaurant; tab: string; children: React.ReactNode }) {
-  const tabs = [["carta", "Carta vini"], ["menu", "Menù"], ["cocktail", "Drink List"], ["link", "Link pubblico"], ["impostazioni", "Impostazioni"]];
+  const tabs = [["carta", "Carta vini"], ["menu", "Menù"], ["cocktail", "Drink List"], ["link", "Link pubblico"],
+    ["qr", "SuPeR QR Studio"], ["impostazioni", "Impostazioni"]];
   return <>
     <Heading title={row.name} subtitle={row.is_published ? "Pubblicato" : "Bozza"}>
       <Link className="secondary" href="/admin/ristoranti">Ristoranti</Link>
@@ -154,6 +158,18 @@ function RestaurantCard({ row, tab, children }: { row: Restaurant; tab: string; 
       <Link href={`/admin/ristoranti/${row.id}?tab=${key}`} key={key} aria-current={key === tab ? "page" : undefined}>{label}</Link>)}</nav>
     {children}
   </>;
+}
+
+async function RestaurantQr({ row }: { row: Restaurant }) {
+  const url = restaurantQrUrl(row.slug);
+  const result = row.is_published
+    ? await publicClient()?.rpc("swm_public_menu", { restaurant_slug: row.slug }) : null;
+  const menu = result?.data as PublicMenu | null | undefined;
+  const status = !row.is_published ? "draft" : !menu || result?.error ? "unavailable"
+    : menu.wines?.length || menu.menu?.some(category => category.dishes.length)
+      || menu.cocktails?.some(category => category.cocktails.length) ? "ready" : "empty";
+  return <RestaurantQrStudio key={row.id} slug={row.slug} url={url} status={status}
+    matrix={url && status === "ready" ? restaurantQrMatrix(url) : null} primaryColor={row.primary_color} />;
 }
 
 async function Restaurants({ id, query }: { id?: string; query: Query }) {
@@ -172,11 +188,15 @@ async function Restaurants({ id, query }: { id?: string; query: Query }) {
   if (!uuid.test(id)) notFound();
   const [row] = records<Restaurant>(await db.from("swm_restaurants").select("*").eq("id", id));
   if (!row) notFound();
-  const tab = query.tab === "menu" || query.tab === "cocktail" || query.tab === "link" || query.tab === "impostazioni" ? query.tab : "carta";
+  const tab = query.tab === "menu" || query.tab === "cocktail" || query.tab === "link"
+    || query.tab === "qr" || query.tab === "impostazioni" ? query.tab : "carta";
   if (tab === "menu") return <RestaurantCard row={row} tab={tab}><RestaurantMenu id={id} /></RestaurantCard>;
   if (tab === "cocktail") return <RestaurantCard row={row} tab={tab}><RestaurantMenu id={id} kind="cocktail" /></RestaurantCard>;
   if (tab === "link") return <RestaurantCard row={row} tab={tab}><PublicLink url={publicRestaurantUrl(row.slug)} published={row.is_published} /></RestaurantCard>;
-  if (tab === "impostazioni") return <RestaurantCard row={row} tab={tab}><section className="panel"><RestaurantForm restaurant={row} /></section></RestaurantCard>;
+  if (tab === "qr") return <RestaurantCard row={row} tab={tab}><RestaurantQr row={row} /></RestaurantCard>;
+  if (tab === "impostazioni") return <RestaurantCard row={row} tab={tab}><section className="panel">
+    <RestaurantForm key={`${row.id}:${row.slug}:${row.is_published}`} restaurant={row} />
+  </section></RestaurantCard>;
   const [wines, refs, assignments, orderRows] = await Promise.all([
     getWines(), getReferences(), getAdminRows<Assignment>((a, b) => db.from("swm_restaurant_wines")
       .select("wine_id,bottle_price,glass_price,status").eq("restaurant_id", id).order("wine_id").range(a, b)),

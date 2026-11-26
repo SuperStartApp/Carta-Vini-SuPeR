@@ -1,5 +1,16 @@
 # Stato del progetto
 
+## Fase 4.7 · SuPeR QR Studio
+
+- Approvata dopo il collaudo manuale dell'interfaccia, della scansione da smartphone, dell'apertura della carta sul dominio ufficiale da rete mobile e del download. Pubblicazione su `main` autorizzata. Lo slug pubblicato è protetto nell'interfaccia e sul server.
+- Lint, typecheck e build superati. In Chrome su viewport da 320 e 1280 px, decodificati 10 export con confronto esatto dell'URL. Verificati dimensioni e pixel del PNG, SVG autonomo, blocco delle origini non ufficiali, contrasto, bozza, carta vuota e salvataggio delle impostazioni. I colori rilevati per Wine Art e Gallo sono disponibili. Il colore del Virgilio richiede la variante nera.
+- Anomalia non bloccante del catalogo. In una prova la posizione verticale è tornata al secondo tentativo. Ricerca, filtri e pagina sono stati ripristinati in entrambe le prove.
+- La RPC pubblica ha risposto in sola lettura per tutte e tre le carte. L'utente ha confermato l'apertura di `menu.cartavinidigitale.it` da rete mobile e segnalato che la propagazione DNS è ancora in corso sulla propria postazione desktop.
+
+## Roadmap
+
+- **SuPeR Wine Intelligence**. Raccolta delle statistiche, dashboard analitica e reportistica professionale. In attesa del documento di progettazione dell'utente.
+
 ## Fase 4.5 · 26 novembre 2026
 
 - Wine Boutique 2.0 approvata dopo la valutazione grafica e funzionale locale, comprese le immagini negli abbinamenti. Schede vino con produttore e prezzi nel riepilogo, note a tutta larghezza, ordine geografico SuPeR nella selezione corrente e layout editoriale per Menù e Drink List.

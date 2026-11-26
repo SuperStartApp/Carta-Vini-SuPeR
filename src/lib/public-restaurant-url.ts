@@ -1,4 +1,4 @@
-/** URL canonico condiviso dai link pubblici e dai futuri QR Code. */
+/** URL canonico condiviso dai link pubblici e dai QR Code. */
 export function publicRestaurantUrl(slug: string): string | null {
   if (slug.length > 80 || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(slug)) return null;
 

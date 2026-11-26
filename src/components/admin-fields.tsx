@@ -70,8 +70,16 @@ export function RestaurantForm({ restaurant }: { restaurant?: Restaurant }) {
         setName(value);
         if (!custom) setSlug(value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 80).replace(/^-+|-+$/g, ""));
       }} /></label>
-      <label>Slug<input name="slug" value={slug} required maxLength={80} pattern="[a-z0-9]+(-[a-z0-9]+)*" onChange={e => { setCustom(true); setSlug(e.target.value); }} /></label>
+      <label>Slug<input name="slug" value={slug} required maxLength={80} pattern="[a-z0-9]+(-[a-z0-9]+)*"
+        readOnly={restaurant?.is_published} aria-describedby={restaurant ? "slug-info" : undefined}
+        onChange={e => { setCustom(true); setSlug(e.target.value); }} /></label>
     </div>
+    {restaurant && <p className="note" id="slug-info">{restaurant.is_published
+      ? "Lo slug è bloccato mentre il ristorante è pubblicato. Cambiarlo può invalidare i link e i QR già stampati."
+      : "Cambiare lo slug di una bozza già pubblicata in passato può invalidare i link e i QR già stampati."}</p>}
+    {restaurant && !restaurant.is_published && slug !== restaurant.slug && <label className="check-field">
+      <input type="checkbox" name="confirm_slug_change" required /> Confermo la modifica dello slug e il rischio per i QR già stampati.
+    </label>}
     <ImageField key={restaurant?.logo_url} label="URL del logo" name="logo_url" initial={restaurant?.logo_url} />
     <div className="fields items-center">
       <label>Colore principale<input name="primary_color" type="color" defaultValue={restaurant?.primary_color ?? "#711f3a"} /></label>
