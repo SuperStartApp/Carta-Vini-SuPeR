@@ -2,6 +2,7 @@
 
 ## Fase 4.8 · SuPeR Social & Contact
 
+- Completata in produzione con il rilascio `0afe623`. Deploy Vercel riuscito e controllo in sola lettura su Enoteca Wine Art, Enosteria del Gallo e Ristorante Virgilio Campo de' Fiori. Tutte le carte hanno risposto HTTP 200 sul dominio canonico. Verificati il footer, le tre destinazioni di contatto, le etichette IT/EN e l'assenza del link Instagram quando il campo è vuoto.
 - Footer istituzionale con tre contatti SuPeR e profilo Instagram facoltativo per ristorante. Migrazione installata manualmente sul Supabase ufficiale, con 6/6 controlli post-installazione confermati e collaudo grafico locale approvato.
 - Su PostgreSQL isolato sono passati 6/6 controlli strutturali, il confronto del payload prima e dopo la migrazione con campo vuoto, la validazione SQL degli URL, la proiezione per i ristoranti pubblicati e la rimozione del profilo.
 - Passati lint, typecheck e build. In Chrome su viewport da 320, 390, 768 e 1280 px verificati i contatti IT/EN, le destinazioni esterne, inserimento, modifica e rimozione di Instagram, rifiuto degli URL non validi, presenza condizionale del collegamento nelle tre sezioni e anteprima ed export SVG di QR Studio. Pubblicazione su `main` autorizzata.

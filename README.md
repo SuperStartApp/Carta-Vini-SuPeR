@@ -41,7 +41,7 @@ Il collaudo manuale è approvato, incluse la scansione da smartphone, l'apertura
 
 Il footer pubblico offre i contatti istituzionali SuPeR tramite WhatsApp, telefono ed email. Per aggiungere Instagram, aprire **Ristoranti → Impostazioni → Social network**, inserire l'URL HTTPS del profilo e salvare. Per rimuoverlo, svuotare il campo e salvare. Il collegamento compare sopra il footer in tutte le sezioni pubbliche.
 
-La [migrazione Instagram](supabase/migrations/20261126000000_swm_restaurant_instagram.sql) è installata sul Supabase ufficiale. L'amministratore ha confermato 6/6 [controlli post-installazione in sola lettura](supabase/verify/20261126000000_swm_restaurant_instagram.sql). Le carte prive di un profilo conservano la risposta RPC precedente.
+La fase 4.8 è in produzione. La [migrazione Instagram](supabase/migrations/20261126000000_swm_restaurant_instagram.sql) è installata sul Supabase ufficiale. L'amministratore ha confermato 6/6 [controlli post-installazione in sola lettura](supabase/verify/20261126000000_swm_restaurant_instagram.sql). Le tre carte pubbliche sono state verificate con il footer SuPeR e il campo Instagram vuoto.
 
 ## Supabase
 
