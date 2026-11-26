@@ -102,8 +102,8 @@ export function PublicDishes({ categories, wines = [], lang, money, onWine, kind
     <div ref={list} className="grid gap-3 pt-3">
       {!visible.length && <p role="status" className="public-empty">{drink ? t.drinkNoResults : t.noResults}</p>}
       {visible.map(category => <section key={category.id}>
-        <h2 className={search ? "dish-category-title" : "sr-only"}>{text(category, lang)}</h2>
-        <div className="grid gap-2">{category.dishes.map(dish => {
+        <h2 className="dish-category-title">{text(category, lang)}</h2>
+        <div className="dish-list">{category.dishes.map(dish => {
           const description = details(dish, lang);
           const pairs = (dish.paired_wine_ids ?? []).flatMap(id => { const wine = wineById.get(id); return wine ? [wine] : []; });
           return <article className="dish-card" key={dish.id} id={`${kind === "cocktail" ? "cocktail" : "dish"}-${dish.id}`} tabIndex={-1}>
@@ -126,7 +126,7 @@ export function PublicDishes({ categories, wines = [], lang, money, onWine, kind
                 return <li key={wine.id}>
                 <button type="button" onClick={() => onWine(wine, dish.id)} title={t.openWine}>
                   {image && <ExternalImage url={image} alt="" className="h-14 w-10 shrink-0 object-contain" />}
-                  <span><strong>{wine.name}</strong><span className="block text-neutral-700">{wine.winery.name}</span>
+                  <span className="min-w-0 wrap-break-word"><strong>{wine.name}</strong><span className="block text-neutral-700">{wine.winery.name}</span>
                     <span className="block">{t.bottle} {money.format(wine.bottle_price)}
                       {wine.glass_price != null && ` · ${t.glass} ${money.format(wine.glass_price)}`}</span>
                   </span>

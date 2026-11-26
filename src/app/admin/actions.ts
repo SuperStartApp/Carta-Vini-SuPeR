@@ -136,6 +136,7 @@ export async function saveWine(form: FormData) {
     } else savedId = String(data);
   } catch (error) { return message(error); }
   revalidatePath("/admin", "layout");
+  if (optional(form, "id")) return { success: "Scheda vino salvata." };
   redirect(`/admin/vini/${savedId}?salvato=1${assignedCount ? `&assegnati=${assignedCount}` : ""}`);
 }
 

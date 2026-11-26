@@ -55,8 +55,8 @@ async function Wines({ id, query }: { id?: string; query: Query }) {
     getReferences(), getWineMetadata(), id === "nuovo" ? getAssignmentRestaurants() : undefined,
   ]);
   if (id === "nuovo") return <>
-    <Heading title="Nuovo vino"><Link href="/admin/vini" className="secondary">Catalogo</Link></Heading>
-    <WineEditor initial={refs} metadata={metadata} initialGrapes={[]} initialAging={[]} initialCharacteristics={[]}
+    <Heading title="Nuovo vino"><Link href="/admin/vini" scroll={false} className="secondary">Torna al catalogo</Link></Heading>
+    <WineEditor key={`nuovo:${typeof query.cantina === "string" ? query.cantina : ""}`} initial={refs} metadata={metadata} initialGrapes={[]} initialAging={[]} initialCharacteristics={[]}
       restaurants={restaurants} suggestedWinery={typeof query.cantina === "string" ? query.cantina : undefined} />
   </>;
   if (!uuid.test(id)) notFound();
@@ -69,7 +69,10 @@ async function Wines({ id, query }: { id?: string; query: Query }) {
   const [wine] = records<Wine>(wineResult);
   if (!wine) notFound();
   return <>
-    <Heading title={wine.name}><Link href="/admin/vini" className="secondary">Catalogo</Link></Heading>
+    <Heading title={wine.name}><div className="flex flex-wrap gap-2">
+      <Link href="/admin/vini/nuovo" className="secondary"><Plus size={16} /> Nuovo vino</Link>
+      <Link href="/admin/vini" scroll={false} className="secondary">Torna al catalogo</Link>
+    </div></Heading>
     {query.salvato === "1" && <p role="status" className="note mb-3">Scheda vino salvata.</p>}
     {query.salvato === "1" && typeof query.assegnati === "string" && /^[1-9]\d*$/.test(query.assegnati)
       && <p role="status" className="note mb-3">Ristoranti assegnati: {query.assegnati}.</p>}

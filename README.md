@@ -23,6 +23,12 @@ npm.cmd run typecheck
 npm.cmd run build
 ```
 
+## Wine Boutique 2.0
+
+Dopo la creazione di un vino, piatto o drink, la scheda resta aperta per le modifiche. I comandi in fondo permettono di aprire una nuova scheda o tornare all'elenco con la vista precedente.
+
+La valutazione grafica e funzionale è approvata, incluse le immagini negli abbinamenti. Gli artefatti del collaudo isolato sono nella cartella ignorata supabase/.temp. Il deploy usa le variabili Supabase e l'origine canonica configurate su Vercel. La fase non richiede migrazioni.
+
 ## Supabase
 
 Se manca `.env.local`, creare il file copiando `.env.example`. Nel progetto Supabase ufficiale aprire **Connect** oppure **Settings → API Keys** e compilare:

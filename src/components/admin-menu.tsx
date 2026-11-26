@@ -56,19 +56,22 @@ function PairingPicker({ options, selected, onChange }: {
   </>;
 }
 
-function DishEditor({ restaurantId, kind, dish, categories, allergens, options, initialCategory, onSaved, onCancel, onDirtyChange, onPendingChange }: {
+function DishEditor({ restaurantId, kind, dish, categories, allergens, options, initialCategory, notice, onSaved, onNew, onCancel, onDirtyChange, onPendingChange }: {
   restaurantId: string; kind: ListKind; dish?: Dish; categories: MenuCategory[]; allergens: Allergen[];
-  options: PairingOption[]; initialCategory: string; onSaved: () => void; onCancel: () => void;
+  options: PairingOption[]; initialCategory: string; notice: string;
+  onSaved: (id: string, notice: string) => void; onNew: () => void; onCancel: () => void;
   onDirtyChange: (dirty: boolean) => void; onPendingChange: (pending: boolean) => void;
 }) {
   const [allergenIds, setAllergens] = useState(dish?.allergen_ids ?? []);
   const [wineIds, setWines] = useState(dish?.wine_ids ?? []);
   const drink = kind === "cocktail";
   return <section className="panel">
-    <h2 className="mb-3">{drink ? (dish ? "Modifica bevanda" : "Nuova bevanda") : (dish?.name_it ?? "Nuovo piatto")}</h2>
+    <h2 className="mb-3">{dish?.name_it ?? (drink ? "Nuova bevanda" : "Nuovo piatto")}</h2>
+    {notice && <p className="note mb-3" role="status">{notice}</p>}
     <ActionForm onDirtyChange={onDirtyChange} onPendingChange={onPendingChange} run={async form => {
       const result = await saveDish(restaurantId, dish?.id ?? null, form, kind);
-      if ("success" in result) onSaved();
+      if ("error" in result) return result;
+      onSaved(result.id, result.success);
       return result;
     }}>
       <fieldset className="grid gap-3">
@@ -111,7 +114,8 @@ function DishEditor({ restaurantId, kind, dish, categories, allergens, options, 
         }} />
       </fieldset>}
       <div className="flex flex-wrap gap-2">
-        <button className="primary" disabled={!categories.length}>{drink ? "Salva bevanda" : "Salva piatto"}</button>
+        <button className="primary" disabled={!categories.length}>{dish ? "Salva modifiche" : drink ? "Salva bevanda" : "Salva piatto"}</button>
+        {dish && <button type="button" className="secondary" onClick={onNew}><Plus size={16} />{drink ? "Nuova bevanda" : "Nuovo piatto"}</button>}
         <button type="button" className="secondary" onClick={onCancel}>Torna all’elenco</button>
       </div>
     </ActionForm>
@@ -171,11 +175,23 @@ export function MenuBoard({ restaurantId, kind, dishes, categories, allergens, o
   }
 
   if (editor === "new" || editing) return <DishEditor key={editor} restaurantId={restaurantId} kind={kind} dish={editing}
-    categories={categories} allergens={allergens} options={options} initialCategory={list.category}
+    categories={categories} allergens={allergens} options={options} initialCategory={list.category} notice={notice}
     onDirtyChange={changed => list.reportDirty("editor", changed)}
     onPendingChange={pending => list.reportPending("editor", pending)}
     onCancel={() => { if (list.canLeave()) closeEditor(); }}
-    onSaved={() => { closeEditor(); setNotice(drink ? "Bevanda salvata." : "Piatto salvato."); }} />;
+    onNew={() => {
+      if (!list.canLeave()) return;
+      setNotice("");
+      setEditor("new");
+      window.scrollTo(0, 0);
+    }}
+    onSaved={(id, message) => {
+      if (editor === "new") {
+        setNotice(message);
+        setEditor(id);
+        window.scrollTo(0, 0);
+      } else setNotice("");
+    }} />;
 
   return <div className="grid gap-4">
     {drink && !categories.length && <section className="panel">

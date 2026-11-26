@@ -79,7 +79,7 @@ export async function saveDish(restaurantId: string, dishId: string | null, form
       : await db.rpc("swm_save_dish", { dish_data: row, allergen_ids: allergenIds, wine_ids: wineIds });
     check(result.error);
     refresh(restaurantId);
-    return { success: kind === "cocktail" ? "Bevanda salvata." : "Piatto salvato." };
+    return { success: kind === "cocktail" ? "Bevanda salvata." : "Piatto salvato.", id: String(result.data) };
   } catch (error) { return failure(error); }
 }
 

@@ -33,10 +33,9 @@ const copy = {
     price: "Prezzo bottiglia", glass: "Disponibile al calice", reset: "Azzera filtri", categories: "Categorie della carta",
     bottle: "Bottiglia", glassPrice: "Calice", none: "Nessun vino corrisponde alla ricerca.", empty: "La carta vini è in aggiornamento.",
     grapes: "Vitigni", nose: "Olfatto", palate: "Gusto", from: "Da", under: "Meno di", language: "Lingua",
-    tagline: "Un viaggio tra territori, vitigni e passioni.",
     close: "Chiudi", remove: "Rimuovi", findOption: "Cerca opzione", showWines: "Mostra vini",
     menu: "Menù", navigation: "Profilo del ristorante", backToDish: "Torna al piatto",
-    drink: "Drink", drinkTagline: "Un brindisi a ogni occasione.",
+    drink: "Drink",
     appellation: "Denominazione", characteristics: "Caratteristiche",
   },
   en: {
@@ -45,10 +44,9 @@ const copy = {
     price: "Bottle price", glass: "Available by the glass", reset: "Clear filters", categories: "Wine categories",
     bottle: "Bottle", glassPrice: "Glass", none: "No wines match your search.", empty: "The wine list is being updated.",
     grapes: "Grapes", nose: "Nose", palate: "Palate", from: "From", under: "Under", language: "Language",
-    tagline: "A journey through wine regions, grape varieties and passion.",
     close: "Close", remove: "Remove", findOption: "Find option", showWines: "Show wines",
     menu: "Menu", navigation: "Restaurant sections", backToDish: "Back to the dish",
-    drink: "Drink", drinkTagline: "A toast for every occasion.",
+    drink: "Drink",
     appellation: "Appellation", characteristics: "Wine characteristics",
   },
 };
@@ -57,20 +55,37 @@ function label(item: Label, lang: Language) {
   return translated(item.name_it, item.name_en, lang);
 }
 
-type Groups = Map<string, { label: string; code: string; regions: Map<string, { label: string; wineries: Map<string, { label: string; wines: PublicWine[] }> }> }>;
+const regionKey = (name: string) => searchable(name).replace(/[^a-z]/g, "");
+const italianRegions = new Map([
+  "Piemonte", "Valle d'Aosta", "Liguria", "Lombardia", "Trentino-Alto Adige", "Veneto", "Friuli Venezia Giulia",
+  "Emilia-Romagna", "Toscana", "Umbria", "Marche", "Lazio", "Abruzzo", "Molise", "Campania", "Puglia",
+  "Basilicata", "Calabria", "Sicilia", "Sardegna",
+].map((name, index) => [regionKey(name), index]));
 
-function groups(wines: PublicWine[], lang: Language): Groups {
-  const countries: Groups = new Map();
+function regionRank(name: string) {
+  const key = regionKey(name).replace(/^valledaostavalleedaoste$/, "valledaosta")
+    .replace(/^trentinoaltoadigesudtirol$/, "trentinoaltoadige");
+  return italianRegions.get(key) ?? italianRegions.size;
+}
+
+function groups(wines: PublicWine[]) {
+  const countries = new Map<string, {
+    country: PublicWine["country"];
+    regions: Map<string, { region: Label; wines: PublicWine[] }>;
+  }>();
   for (const wine of wines) {
-    const country = countries.get(wine.country.id) ?? { label: label(wine.country, lang), code: wine.country.code, regions: new Map() };
+    const country = countries.get(wine.country.id) ?? { country: wine.country, regions: new Map() };
     countries.set(wine.country.id, country);
-    const region = country.regions.get(wine.region.id) ?? { label: label(wine.region, lang), wineries: new Map() };
+    const region = country.regions.get(wine.region.id) ?? { region: wine.region, wines: [] };
     country.regions.set(wine.region.id, region);
-    const winery = region.wineries.get(wine.winery.id) ?? { label: wine.winery.name, wines: [] };
-    region.wineries.set(wine.winery.id, winery);
-    winery.wines.push(wine);
+    region.wines.push(wine);
   }
-  return countries;
+  return [...countries.values()].map(({ country, regions }) => ({
+    country,
+    regions: [...regions.values()].sort((a, b) =>
+      (country.code === "IT" ? regionRank(a.region.name_it) - regionRank(b.region.name_it) : 0)
+      || a.region.name_it.localeCompare(b.region.name_it, "it") || a.region.id.localeCompare(b.region.id)),
+  }));
 }
 
 function options(items: { id: string; name: string }[], lang: Language) {
@@ -99,8 +114,8 @@ function accentColors(hex: string) {
   }, 0);
   const whiteContrast = (channels: number[]) => 1.05 / (luminance(channels) + 0.05);
   let ink = rgb;
-  const paperLight = luminance([250, 247, 242]) + 0.05;
-  while (paperLight / (luminance(ink) + 0.05) < 4.5) {
+  const washLight = luminance([243, 240, 233]) + 0.05;
+  while (washLight / (luminance(ink) + 0.05) < 4.5) {
     ink = ink.map(channel => Math.floor(channel * 0.95));
   }
   return {
@@ -137,23 +152,26 @@ function WineRow({ wine, lang, money, onBack }: { wine: PublicWine; lang: Langua
     { title: t.palate, value: palate, Icon: Droplets },
   ].filter(note => note.value);
   return <article className="wine-row" id={`wine-${wine.id}`} tabIndex={-1}>
-    {image && <ExternalImage key={image} url={image} alt={wine.name} className="wine-image" />}
-    <div className="wine-info">
-      <h5 className="wine-name">{wine.name}</h5>
-      {classification && <p className="wine-appellation">{classification}</p>}
-      {characteristics.length > 0 && <ul className="wine-characteristics" aria-label={t.characteristics}>
-        {characteristics.map(item => <li key={item.id}>{item.name}</li>)}
-      </ul>}
-      {facts.length > 0 && <ul className="wine-facts">{facts.map(fact => <li key={String(fact)}>{fact}</li>)}</ul>}
-      <dl className="wine-prices">
-        <div><dt>{t.bottle}</dt><dd>{money.format(wine.bottle_price)}</dd></div>
-        {wine.glass_price != null && <div><dt>{t.glassPrice}</dt><dd>{money.format(wine.glass_price)}</dd></div>}
-      </dl>
-      {notes.length > 0 && <dl className="wine-notes">{notes.map(({ title, value, Icon }) =>
-        <div key={title}><dt><Icon size={13} aria-hidden="true" />{title}</dt><dd>{value}</dd></div>,
-      )}</dl>}
-      {onBack && <button className="boutique-filter-button mt-3" type="button" onClick={onBack}>{t.backToDish}</button>}
+    <div className="wine-overview">
+      {image && <ExternalImage key={image} url={image} alt={wine.name} className="wine-image" />}
+      <div className="wine-info">
+        <p className="wine-winery">{wine.winery.name}</p>
+        <h4 className="wine-name">{wine.name}</h4>
+        {classification && <p className="wine-appellation">{classification}</p>}
+        {facts.length > 0 && <p className="wine-facts">{facts.join(" · ")}</p>}
+        {characteristics.length > 0 && <ul className="wine-characteristics" aria-label={t.characteristics}>
+          {characteristics.map(item => <li key={item.id}>{item.name}</li>)}
+        </ul>}
+        <dl className="wine-prices">
+          <div><dt>{t.bottle}</dt><dd>{money.format(wine.bottle_price)}</dd></div>
+          {wine.glass_price != null && <div><dt>{t.glassPrice}</dt><dd>{money.format(wine.glass_price)}</dd></div>}
+        </dl>
+      </div>
     </div>
+    {notes.length > 0 && <dl className="wine-notes">{notes.map(({ title, value, Icon }) =>
+      <div key={title}><dt><Icon size={13} aria-hidden="true" />{title}</dt><dd>{value}</dd></div>,
+    )}</dl>}
+    {onBack && <button className="boutique-filter-button mt-3" type="button" onClick={onBack}>{t.backToDish}</button>}
   </article>;
 }
 
@@ -244,7 +262,7 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
     };
   }
   const visible = matching(filters);
-  const visibleGroups = groups(visible.filter(w => w.category_id === active), lang);
+  const visibleGroups = groups(visible.filter(w => w.category_id === active));
   const accent = /^#[0-9a-f]{6}$/i.test(menu.restaurant.primary_color) ? menu.restaurant.primary_color : "#711f3a";
   const logo = safeImage(menu.restaurant.logo_url);
   const brandIcon = <Wine size={29} aria-hidden="true" />;
@@ -271,7 +289,6 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
         <p>{menu.restaurant.name}</p>
         <h1>{view === "cocktail" ? "Drink List" : view === "menu" ? t.menu : t.list}</h1>
         <div className="boutique-ornament" aria-hidden="true"><Grape size={15} /></div>
-        <span className="boutique-tagline">{view === "cocktail" ? t.drinkTagline : t.tagline}</span>
       </header>
       {(hasMenu || hasCocktails) && <nav className="tabs public-section-tabs" aria-label={t.navigation}>
         {(hasMenu || menu.wines.length > 0) && <button type="button" aria-pressed={view === "wine"} onClick={() => setView("wine")}>{t.list}</button>}
@@ -316,17 +333,14 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
         </nav>}
       </>}
       {!visible.length && <p className="public-empty" role="status">{menu.wines.length ? t.none : t.empty}</p>}
-      <div ref={listRef} className="public-results">{[...visibleGroups].map(([countryId, country]) => <section className="country-group" key={countryId}>
-        <h2><span aria-hidden="true">{flag(country.code)}</span>{country.label}</h2>
-        {[...country.regions].map(([regionId, region]) => <section className="region-group" key={regionId}>
-          <h3>{region.label}</h3>
-          {[...region.wineries].map(([wineryId, winery]) => <section className="winery-group" key={wineryId}>
-            <h4>{winery.label}</h4>
-            {winery.wines.map(wine => <WineRow key={wine.id} wine={wine} lang={lang} money={money}
+      <div ref={listRef} className="public-results">{visibleGroups.map(({ country, regions }) => <section className="country-group" key={country.id}>
+        <h2><span aria-hidden="true">{flag(country.code)}</span>{label(country, lang)}</h2>
+        {regions.map(({ region, wines }) => <section className="region-group" key={region.id}>
+          <h3>{label(region, lang)}</h3>
+          {wines.map(wine => <WineRow key={wine.id} wine={wine} lang={lang} money={money}
               onBack={pairing?.wineId === wine.id ? () => {
                 setView("menu"); setDestination({ id: `dish-${pairing.dishId}` }); setPairing(undefined);
               } : undefined} />)}
-          </section>)}
         </section>)}
       </section>)}</div>
       </div>

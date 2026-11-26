@@ -24,6 +24,7 @@ export function CatalogList({ wines, refs, appellations, restaurants, assignment
   const [winery, setWinery] = useState("");
   const [appellation, setAppellation] = useState("");
   const [assignmentWine, setAssignmentWine] = useState<string>();
+  const [returnScroll, setReturnScroll] = useState<number>();
   const restore = list.restore;
   useEffect(() => {
     try {
@@ -33,7 +34,6 @@ export function CatalogList({ wines, refs, appellations, restaurants, assignment
         category: string; page: number; scroll: number; search: string;
         country: string; region: string; winery: string; appellation: string;
       };
-      let scrollFrame = 0;
       const restoreFrame = requestAnimationFrame(() => {
         sessionStorage.removeItem(catalogReturnKey);
         setSearch(previous.search);
@@ -42,13 +42,18 @@ export function CatalogList({ wines, refs, appellations, restaurants, assignment
         setWinery(previous.winery);
         setAppellation(previous.appellation);
         restore(previous.category, previous.page);
-        scrollFrame = requestAnimationFrame(() => window.scrollTo(0, previous.scroll));
+        setReturnScroll(previous.scroll);
       });
-      return () => { cancelAnimationFrame(restoreFrame); cancelAnimationFrame(scrollFrame); };
+      return () => cancelAnimationFrame(restoreFrame);
     } catch {
       // Il catalogo resta utilizzabile anche con storage disabilitato.
     }
   }, [restore]);
+  useEffect(() => {
+    if (returnScroll === undefined) return;
+    const frame = requestAnimationFrame(() => window.scrollTo(0, returnScroll));
+    return () => cancelAnimationFrame(frame);
+  }, [returnScroll]);
   const wineries = new Map(refs.wineries.map(w => [w.id, w.name]));
   const categories = new Map(refs.categories.map(c => [c.id, c.name_it]));
   const regions = new Map(refs.regions.map(r => [r.id, r]));

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import { Plus, X } from "lucide-react";
 import { saveReference, saveWine } from "../app/admin/actions";
 import type { ReferenceKind, References, Restaurant, Wine, WineGrape, WineMetadata } from "../lib/models";
@@ -33,6 +34,7 @@ export function WineEditor({ initial, metadata, wine, initialGrapes, initialAgin
   const [bottle, setBottle] = useState("");
   const [glass, setGlass] = useState("");
   const draft = useAdminList();
+  const markDirty = () => draft.reportDirty("wine", true);
   const dialog = useRef<HTMLDialogElement>(null);
   const wineryId = refs.wineries.find(w => normalize(w.name) === normalize(wineryText))?.id ?? "";
   const quickButton = (kind: ReferenceKind, label: string) =>
@@ -42,7 +44,12 @@ export function WineEditor({ initial, metadata, wine, initialGrapes, initialAgin
     }}><Plus size={15} />{label}</button>;
 
   return <>
-    <ActionForm run={saveWine} className="panel" onPendingChange={pending => draft.reportPending("wine", pending)}>
+    <div onChange={markDirty}>
+    <ActionForm run={async form => {
+      const result = await saveWine(form);
+      if ("success" in result) draft.reportDirty("wine", false);
+      return result;
+    }} className="panel" onPendingChange={pending => draft.reportPending("wine", pending)}>
       {wine && <input type="hidden" name="id" value={wine.id} />}
       <div className="fields">
         <label>Nome vino<input name="name" defaultValue={wine?.name} required /></label>
@@ -109,7 +116,7 @@ export function WineEditor({ initial, metadata, wine, initialGrapes, initialAgin
             <input className="!w-24" type="number" min="0.01" max="100" step="0.01" aria-label="Percentuale vitigno"
               placeholder="%" name={`grape_${g.grape_id}`} defaultValue={g.percentage ?? ""} />
             <button className="secondary compact" aria-label="Rimuovi vitigno" type="button"
-              onClick={() => setGrapes(grapes.filter(row => row.grape_id !== g.grape_id))}><X size={16} /></button>
+              onClick={() => { setGrapes(grapes.filter(row => row.grape_id !== g.grape_id)); markDirty(); }}><X size={16} /></button>
           </div>)}
         </div>
         <div className="grid gap-2 content-start">
@@ -124,7 +131,7 @@ export function WineEditor({ initial, metadata, wine, initialGrapes, initialAgin
             <input type="hidden" name="aging_id" value={id} />
             <span>{refs.aging.find(item => item.id === id)?.name_it}</span>
             <button className="secondary compact" aria-label="Rimuovi affinamento" type="button"
-              onClick={() => setAging(aging.filter(item => item !== id))}><X size={16} /></button>
+              onClick={() => { setAging(aging.filter(item => item !== id)); markDirty(); }}><X size={16} /></button>
           </div>)}
         </div>
       </div>
@@ -152,11 +159,16 @@ export function WineEditor({ initial, metadata, wine, initialGrapes, initialAgin
         <summary>Assegna ai ristoranti</summary>
         <div className="mt-3">
           <RestaurantAssignmentFields restaurants={restaurants} bottle={bottle} glass={glass}
-            onSelectionChange={count => draft.reportDirty("wine", count > 0)} />
+            onSelectionChange={markDirty} />
         </div>
       </details>}
-      <button className="primary justify-self-start">{wine ? "Salva modifiche" : "Salva vino"}</button>
+      <div className="flex flex-wrap gap-2">
+        <button className="primary">{wine ? "Salva modifiche" : "Salva vino"}</button>
+        {wine && <Link href="/admin/vini/nuovo" className="secondary"><Plus size={16} /> Nuovo vino</Link>}
+        <Link href="/admin/vini" scroll={false} className="secondary">Torna al catalogo</Link>
+      </div>
     </ActionForm>
+    </div>
     <dialog ref={dialog} className="panel m-auto w-[min(92vw,34rem)] backdrop:bg-black/30"
       aria-labelledby="quick-title" onClose={() => setQuick(undefined)}>
       {quick && <>
@@ -177,6 +189,7 @@ export function WineEditor({ initial, metadata, wine, initialGrapes, initialAgin
           if (quick === "categories") setCategory(row.id);
           if (quick === "grapes") setGrapes([...grapes, { grape_id: row.id, percentage: null }]);
           if (quick === "aging") setAging([...aging, row.id]);
+          markDirty();
           dialog.current?.close();
         }}>
           <ReferenceFields kind={quick} refs={refs} />

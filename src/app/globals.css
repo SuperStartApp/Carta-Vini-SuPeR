@@ -62,48 +62,50 @@ body {
   .assignment-fields :is(input, select) { @apply !min-h-9 !px-1.5 !py-1 sm:!px-2.5; }
 
   .public-page {
-    --boutique-paper: #faf7f2;
-    --accent-line: color-mix(in srgb, var(--accent-ink) 20%, var(--boutique-paper));
-    --accent-wash: color-mix(in srgb, var(--restaurant-accent) 7%, white);
+    --boutique-paper: #fcfbf8;
+    --boutique-muted: #625c54;
+    --boutique-line: #e8e3da;
+    --boutique-wash: #f3f0e9;
     @apply min-h-dvh pb-8;
     background: var(--boutique-paper);
+    color: #262421;
   }
   .public-page :is(a, button, input, select, summary):focus-visible { outline-color: var(--accent-ink); }
   .public-page input[type="checkbox"] { accent-color: var(--accent-ink); }
   .public-wrap { @apply mx-auto max-w-4xl px-4 sm:px-8; }
   .public-languages { @apply flex justify-end gap-1 pt-2; }
   .public-languages button { @apply rounded-full px-3 py-1.5 text-sm; }
-  .public-languages button[aria-pressed="true"] { @apply font-bold; background: var(--accent-wash); color: var(--accent-ink); }
+  .public-languages button[aria-pressed="true"] { @apply font-bold; background: var(--boutique-wash); color: var(--accent-ink); }
   .public-header { @apply grid justify-items-center gap-1.5 pb-4 text-center sm:pb-6; }
   .public-logo { @apply grid min-h-9 min-w-9 place-items-center; color: var(--accent-ink); }
   .public-logo img { @apply max-h-14 sm:max-h-18; }
-  .public-header p { @apply text-xs font-semibold tracking-[0.16em] uppercase sm:text-sm; color: var(--accent-ink); }
-  .public-header h1 { @apply font-serif text-5xl leading-none tracking-tight sm:text-6xl; color: var(--accent-ink); }
+  .public-header p { @apply text-xs font-semibold tracking-[0.16em] uppercase sm:text-sm; color: var(--boutique-muted); }
+  .public-header h1 { @apply font-serif text-5xl leading-none tracking-tight sm:text-6xl; }
   .boutique-ornament { @apply flex items-center gap-2; color: var(--accent-ink); }
-  .boutique-ornament::before, .boutique-ornament::after { @apply h-px w-7 content-['']; background: var(--accent-line); }
-  .boutique-tagline { @apply font-serif text-base text-neutral-700 italic; }
+  .boutique-ornament::before, .boutique-ornament::after { @apply h-px w-7 content-['']; background: var(--boutique-line); }
   .public-tools { @apply grid grid-cols-[minmax(0,1fr)_auto] gap-2 pt-2; }
-  .search-public { @apply flex min-w-0 items-center gap-2 rounded-xl border bg-white px-3; border-color: var(--accent-line); }
-  .search-public svg { @apply shrink-0; color: var(--accent-ink); }
+  .search-public { @apply flex min-w-0 items-center gap-2 rounded-xl border bg-white px-3; border-color: var(--boutique-line); }
+  .search-public svg { @apply shrink-0; color: var(--boutique-muted); }
   .search-public input { @apply !border-0 !px-0; }
+  .search-public input::placeholder { color: var(--boutique-muted); opacity: 1; }
   .boutique-filter-button, .boutique-apply {
     @apply inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-semibold;
-    border-color: var(--accent-line);
-    background: var(--accent-wash);
+    border-color: var(--boutique-line);
+    background: var(--boutique-wash);
     color: var(--accent-ink);
   }
   .filter-count { @apply grid size-5 place-items-center rounded-full text-xs tabular-nums text-white; background: var(--accent-ink); }
   .filter-chips { @apply col-span-full flex flex-wrap gap-1.5; }
-  .filter-chips button { @apply flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-sm; border-color: var(--accent-line); background: var(--accent-wash); color: var(--accent-ink); }
+  .filter-chips button { @apply flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-sm; border-color: var(--boutique-line); background: var(--boutique-wash); color: var(--accent-ink); }
   .filter-chips svg { @apply shrink-0; }
   .boutique-filter-dialog {
     @apply fixed inset-x-0 top-auto bottom-0 m-0 max-h-[85dvh] w-full max-w-none overflow-hidden rounded-t-2xl border bg-white p-0;
-    border-color: var(--accent-line);
+    border-color: var(--boutique-line);
   }
   .boutique-filter-dialog::backdrop { background: rgb(28 23 18 / 44%); }
   .filter-sheet { @apply grid max-h-[85dvh] grid-rows-[auto_minmax(0,1fr)_auto]; }
-  .filter-sheet-header, .filter-sheet-footer { @apply flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3 sm:px-6; border-color: var(--accent-line); }
-  .filter-sheet-header h2 { @apply font-serif text-2xl; color: var(--accent-ink); }
+  .filter-sheet-header, .filter-sheet-footer { @apply flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3 sm:px-6; border-color: var(--boutique-line); }
+  .filter-sheet-header h2 { @apply font-serif text-2xl; }
   .filter-sheet-header button { @apply grid size-10 place-items-center rounded-full; color: var(--accent-ink); }
   .filter-sheet-fields { @apply grid gap-4 overflow-y-auto overscroll-contain px-4 py-4 sm:grid-cols-2 sm:px-6; }
   .filter-sheet-footer { @apply border-t border-b-0; padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
@@ -120,9 +122,10 @@ body {
   .public-tabs {
     @apply sticky top-0 z-10 -mx-1 mt-2 border-b px-1 py-2;
     background: var(--boutique-paper);
-    border-color: var(--accent-line);
+    border-color: var(--boutique-line);
   }
-  .public-tabs button { @apply flex items-center gap-1.5 bg-white; border-color: var(--accent-line); color: var(--accent-ink); }
+  .public-tabs, .public-section-tabs { scrollbar-width: thin; scrollbar-color: #918679 transparent; }
+  .public-tabs button { @apply flex items-center gap-1.5 bg-white; border-color: var(--boutique-line); color: var(--boutique-muted); }
   .public-tabs button[aria-pressed="true"] {
     background: var(--restaurant-accent);
     border-color: var(--accent-ink);
@@ -131,63 +134,62 @@ body {
   .public-empty { @apply py-10 text-center text-neutral-600; }
   .public-results { @apply flow-root; }
   .country-group { @apply mt-4 sm:mt-6; }
-  .country-group h2 { @apply flex items-center gap-2 border-b pb-1 font-serif text-3xl sm:text-4xl; border-color: var(--accent-line); }
+  .country-group h2 { @apply flex items-center gap-2 border-b pb-1 font-serif text-3xl sm:text-4xl; border-color: var(--boutique-line); }
   .country-group h2 span { @apply text-lg; }
   .region-group { @apply mt-3 sm:mt-4; }
-  .region-group h3 { @apply font-serif text-xl sm:text-2xl; }
-  .winery-group { @apply mt-2 sm:mt-3; }
-  .winery-group h4 { @apply mb-2 text-sm font-semibold tracking-wide; }
-  .country-group :is(h2, h3, h4, h5), .wine-notes dt, .wine-prices dd { color: var(--accent-ink); }
+  .region-group h3 { @apply mb-2 font-serif text-xl sm:text-2xl; color: var(--boutique-muted); }
   .wine-row {
-    @apply mb-2 grid grid-cols-[minmax(0,1fr)] items-start gap-2 rounded-xl border bg-white px-3 py-3 sm:gap-5 sm:px-5 sm:py-4;
-    border-color: var(--accent-line);
+    @apply mb-3 rounded-xl border bg-white px-3 py-3 sm:px-5 sm:py-4;
+    border-color: var(--boutique-line);
   }
-  .wine-row:has(> .wine-image) { grid-template-columns: clamp(5rem, 27vw, 10.5rem) minmax(0, 1fr); }
-  .wine-image { @apply h-[clamp(10.5rem,49vw,15rem)] w-full self-center object-contain; }
+  .wine-overview { @apply grid min-w-0 items-center gap-3 sm:gap-5; }
+  .wine-overview:has(> .wine-image) { grid-template-columns: clamp(4.75rem, 24vw, 9rem) minmax(0, 1fr); }
+  .wine-image { @apply h-[clamp(9rem,43vw,13rem)] w-full object-contain; }
   .wine-info { @apply min-w-0 wrap-break-word; }
-  .wine-name { @apply font-serif text-[clamp(1.2rem,4vw,1.65rem)] leading-tight font-semibold; }
-  .wine-appellation { @apply mt-1 text-sm font-medium; color: var(--accent-ink); }
-  .wine-characteristics { @apply mt-2 flex flex-wrap gap-1 text-xs leading-snug; color: var(--accent-ink); }
-  .wine-characteristics li { @apply rounded-full px-2 py-1; background: var(--accent-wash); }
-  .wine-facts { @apply mt-2 flex flex-wrap gap-1 text-xs text-neutral-700 tabular-nums; }
-  .wine-facts li { @apply rounded-full px-2 py-0.5; background: var(--accent-wash); }
-  .wine-prices { @apply my-2 flex flex-wrap gap-x-4 gap-y-1 text-sm tabular-nums; }
+  .wine-winery { @apply mb-0.5 text-[0.9375rem] leading-snug font-medium sm:text-base; color: var(--boutique-muted); }
+  .wine-name { @apply font-serif text-[clamp(1.4375rem,5vw,1.5625rem)] leading-tight font-semibold; }
+  .wine-appellation { @apply mt-1 text-sm font-medium; }
+  .wine-characteristics { @apply mt-2 flex flex-wrap gap-1 text-xs leading-snug; color: var(--boutique-muted); }
+  .wine-characteristics li { @apply rounded-full px-2 py-1; background: var(--boutique-wash); }
+  .wine-facts { @apply mt-1.5 text-sm tabular-nums; color: var(--boutique-muted); }
+  .wine-prices { @apply mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm tabular-nums; }
   .wine-prices div { @apply flex flex-wrap items-baseline gap-x-1.5; }
-  .wine-prices dt { @apply text-neutral-600; }
-  .wine-prices dd { @apply font-semibold; }
-  .wine-notes { @apply grid gap-1 text-sm leading-snug text-neutral-700; }
-  .wine-notes dt { @apply mr-1.5 inline font-semibold; }
+  .wine-prices dt { color: var(--boutique-muted); }
+  .wine-prices dd { @apply text-xl leading-tight font-semibold sm:text-[1.375rem]; color: var(--accent-ink); }
+  .wine-notes { @apply mt-3 grid gap-1 border-t pt-3 text-base leading-relaxed wrap-break-word; border-color: var(--boutique-line); color: var(--boutique-muted); }
+  .wine-notes dt { @apply mr-1.5 inline font-bold; color: #262421; }
   .wine-notes dt svg { @apply mr-1 inline align-[-0.12em]; }
   .wine-notes dd { @apply inline whitespace-pre-line; }
-  .boutique-footer { @apply mt-8 border-t pt-4 text-center text-sm text-neutral-600; border-color: var(--accent-line); }
+  .boutique-footer { @apply mt-8 border-t pt-4 text-center text-sm text-neutral-600; border-color: var(--boutique-line); }
   .public-section-tabs { @apply mb-2; justify-content: safe center; }
-  .public-section-tabs button { @apply bg-white; border-color: var(--accent-line); color: var(--accent-ink); }
+  .public-section-tabs button { @apply bg-white; border-color: var(--boutique-line); color: var(--boutique-muted); }
   .public-section-tabs button[aria-pressed="true"] { background: var(--restaurant-accent); border-color: var(--accent-ink); color: var(--accent-tab-text); }
   .dish-tools { @apply gap-1.5 sm:gap-2; }
   .dish-tools > button { @apply px-2 sm:px-3; }
-  .dish-warning { @apply mt-3 rounded-lg px-3 py-2 text-sm leading-snug text-neutral-700; background: var(--accent-wash); }
-  .dish-category-title { @apply mb-2 font-serif text-xl; color: var(--accent-ink); }
+  .dish-warning { @apply mt-3 rounded-lg px-3 py-2 text-sm leading-snug text-neutral-700; background: var(--boutique-wash); }
+  .dish-category-title { @apply border-b pb-2 font-serif text-2xl leading-tight sm:text-3xl; border-color: var(--boutique-line); }
   .dish-card, .wine-row { scroll-margin-top: 4.5rem; }
-  .dish-card { @apply rounded-xl border bg-white px-3 py-2.5 sm:px-5 sm:py-4; border-color: var(--accent-line); }
-  .dish-card header { @apply flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1; color: var(--accent-ink); }
-  .dish-card h3 { @apply min-w-0 font-serif text-2xl leading-tight wrap-break-word; }
-  .dish-card header strong { @apply whitespace-nowrap tabular-nums; }
-  .dish-card h4 { @apply mb-1.5 text-sm font-semibold; color: var(--accent-ink); }
-  .dish-description { @apply mt-1.5 whitespace-pre-line text-neutral-700; }
+  .dish-card { @apply py-4 sm:py-5; }
+  .dish-card + .dish-card { @apply border-t; border-color: var(--boutique-line); }
+  .dish-card header { @apply grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3; }
+  .dish-card h3 { @apply min-w-0 font-serif text-[1.375rem] leading-tight wrap-break-word sm:text-2xl; }
+  .dish-card header strong { @apply text-right text-lg whitespace-nowrap tabular-nums; color: var(--accent-ink); }
+  .dish-card h4 { @apply mb-1.5 text-sm font-semibold; }
+  .dish-description { @apply mt-1.5 leading-relaxed whitespace-pre-line wrap-break-word; color: var(--boutique-muted); }
   .dish-allergens { @apply flex flex-wrap items-center gap-x-1; }
-  .dish-allergen-label { @apply mr-1 text-sm font-semibold; color: var(--accent-ink); }
+  .dish-allergen-label { @apply mr-1 text-sm font-semibold; color: var(--boutique-muted); }
   .dish-allergens button {
     @apply inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full;
   }
   .dish-allergen-badge {
     @apply inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-xs font-semibold tabular-nums;
-    border-color: var(--accent-line);
-    background: var(--accent-wash);
-    color: var(--accent-ink);
+    border-color: var(--boutique-line);
+    background: var(--boutique-wash);
+    color: var(--boutique-muted);
   }
-  .dish-pairings { @apply mt-2 border-t pt-2; border-color: var(--accent-line); }
+  .dish-pairings { @apply mt-2 border-t pt-2; border-color: var(--boutique-line); }
   .dish-pairings ul { @apply grid gap-2 sm:grid-cols-2; }
-  .dish-pairings button { @apply flex h-full w-full items-center gap-2 rounded-lg p-2 text-left text-sm; background: var(--accent-wash); color: var(--accent-ink); }
+  .dish-pairings button { @apply flex h-full w-full items-center gap-2 rounded-lg p-2 text-left text-sm; background: var(--boutique-wash); color: var(--accent-ink); }
   .allergen-guide { @apply grid gap-3 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6; }
   .allergen-guide dt { @apply flex items-center gap-2 font-semibold; color: var(--accent-ink); }
   .allergen-guide dd { @apply mt-1 text-sm text-neutral-700; }

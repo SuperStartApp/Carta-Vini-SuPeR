@@ -1,5 +1,12 @@
 # Stato del progetto
 
+## Fase 4.5 · 26 novembre 2026
+
+- Wine Boutique 2.0 approvata dopo la valutazione grafica e funzionale locale, comprese le immagini negli abbinamenti. Schede vino con produttore e prezzi nel riepilogo, note a tutta larghezza, ordine geografico SuPeR nella selezione corrente e layout editoriale per Menù e Drink List.
+- Dopo la creazione di vini, piatti e bevande il gestionale apre la scheda appena salvata. Verificati in Chrome modifica, apertura di una scheda vuota, conferma delle modifiche non salvate e ripristino dell'elenco con filtri e pagina. Nel catalogo è stata verificata anche la posizione di scorrimento dopo una sequenza di inserimento.
+- Verificate le carte dimostrative bordeaux e verde a 320, 360, 390, 430, 768 e 1280 px. Controllati vini con immagine e senza, note lunghe, varianti, campi facoltativi, piatti con nome lungo, allergeni e abbinamenti, Drink List, ricerca, filtri, tastiera e passaggio IT/EN. I testi campionati rispettano il rapporto di contrasto di 4,5:1 anche con colori di prova molto chiari o scuri.
+- Lint, typecheck e build superati. Accesso dimostrativo verificato sul servizio locale con API simulate. Il collaudo usa dati sintetici. Script, credenziali dimostrative e configurazione di collaudo sono esclusi dal rilascio. Pubblicazione su main autorizzata.
+
 ## Fase 4.4 · 25 novembre 2026
 
 - Nuova assegnazione multiristorante dal catalogo. Preparata la migrazione della sola RPC atomica con verifica strutturale in sola lettura.
