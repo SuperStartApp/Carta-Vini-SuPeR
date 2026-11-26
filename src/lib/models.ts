@@ -21,6 +21,7 @@ export type Wine = {
 export type WineGrape = { grape_id: string; percentage: number | null };
 export type Restaurant = {
   id: string; name: string; slug: string; logo_url: string | null;
+  instagram_url?: string | null;
   primary_color: string; is_published: boolean; cocktail_enabled: boolean;
 };
 export const statuses = { available: "Disponibile", unavailable: "Non disponibile", suspended: "Sospeso" } as const;

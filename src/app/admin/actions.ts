@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { referenceTables, statuses, type ReferenceKind, type Status } from "../../lib/models";
 import { requireAdmin } from "../../lib/supabase";
+import { instagramProfileUrl } from "../../lib/instagram-url";
 
 function value(form: FormData, key: string) {
   return String(form.get(key) ?? "").trim();
@@ -151,10 +152,14 @@ export async function saveRestaurant(form: FormData) {
       throw new Error("Lo slug può contenere lettere minuscole, numeri e trattini, fino a 80 caratteri.");
     }
     if (!/^#[0-9a-fA-F]{6}$/.test(color)) throw new Error("Seleziona un colore valido.");
+    const instagram = optional(form, "instagram_url");
+    const profile = instagram ? instagramProfileUrl(instagram) : null;
+    if (instagram && !profile) throw new Error("Inserisci l’URL HTTPS di un profilo Instagram valido.");
     const row = {
       name: required(form, "name", "Nome ristorante"), slug, logo_url: image(form, "logo_url"),
       primary_color: color, is_published: form.get("is_published") === "on",
       cocktail_enabled: form.get("cocktail_enabled") === "on",
+      ...(form.has("instagram_url") ? { instagram_url: profile } : {}),
     };
     const table = db.from("swm_restaurants");
     let previous: { slug: string; is_published: boolean } | undefined;

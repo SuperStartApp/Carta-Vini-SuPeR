@@ -81,6 +81,12 @@ export function RestaurantForm({ restaurant }: { restaurant?: Restaurant }) {
       <input type="checkbox" name="confirm_slug_change" required /> Confermo la modifica dello slug e il rischio per i QR già stampati.
     </label>}
     <ImageField key={restaurant?.logo_url} label="URL del logo" name="logo_url" initial={restaurant?.logo_url} />
+    <fieldset className="details grid gap-2">
+      <legend className="px-1 font-semibold">Social network</legend>
+      <label>URL profilo Instagram<input type="url" name="instagram_url" defaultValue={restaurant?.instagram_url ?? ""}
+        placeholder="https://www.instagram.com/profilo/" aria-describedby="instagram-url-info" /></label>
+      <p className="note" id="instagram-url-info">Facoltativo. Lascia il campo vuoto per rimuovere il collegamento.</p>
+    </fieldset>
     <div className="fields items-center">
       <label>Colore principale<input name="primary_color" type="color" defaultValue={restaurant?.primary_color ?? "#711f3a"} /></label>
       <label className="check-field"><input name="is_published" type="checkbox" defaultChecked={restaurant?.is_published} /> Pubblica il ristorante</label>

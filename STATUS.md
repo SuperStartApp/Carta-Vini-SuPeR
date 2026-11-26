@@ -1,5 +1,11 @@
 # Stato del progetto
 
+## Fase 4.8 · SuPeR Social & Contact
+
+- Footer istituzionale con tre contatti SuPeR e profilo Instagram facoltativo per ristorante. Migrazione installata manualmente sul Supabase ufficiale, con 6/6 controlli post-installazione confermati e collaudo grafico locale approvato.
+- Su PostgreSQL isolato sono passati 6/6 controlli strutturali, il confronto del payload prima e dopo la migrazione con campo vuoto, la validazione SQL degli URL, la proiezione per i ristoranti pubblicati e la rimozione del profilo.
+- Passati lint, typecheck e build. In Chrome su viewport da 320, 390, 768 e 1280 px verificati i contatti IT/EN, le destinazioni esterne, inserimento, modifica e rimozione di Instagram, rifiuto degli URL non validi, presenza condizionale del collegamento nelle tre sezioni e anteprima ed export SVG di QR Studio. Pubblicazione su `main` autorizzata.
+
 ## Fase 4.7 · SuPeR QR Studio
 
 - Approvata dopo il collaudo manuale dell'interfaccia, della scansione da smartphone, dell'apertura della carta sul dominio ufficiale da rete mobile e del download. Pubblicazione su `main` autorizzata. Lo slug pubblicato è protetto nell'interfaccia e sul server.
@@ -9,7 +15,7 @@
 
 ## Roadmap
 
-- **SuPeR Wine Intelligence**. Raccolta delle statistiche, dashboard analitica e reportistica professionale. In attesa del documento di progettazione dell'utente.
+- **SuPeR Wine Intelligence**. Raccolta delle statistiche, dashboard analitica e reportistica professionale. Sviluppo futuro temporaneamente sospeso.
 
 ## Fase 4.5 · 26 novembre 2026
 

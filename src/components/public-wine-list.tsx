@@ -7,6 +7,7 @@ import type { PublicCocktailCategory, PublicMenuCategory } from "../lib/menu";
 import { searchable } from "../lib/search";
 import { emptyFilters, selectFilters, WineFilterPanel, type FilterOptions, type SelectFilter, type WineFilters } from "./public-wine-filters";
 import { PublicDishes } from "./public-dishes";
+import { PublicFooter } from "./public-footer";
 import { ExternalImage, safeImage, translated, type Language } from "./public-presentation";
 
 type Named = { id: string; name: string };
@@ -19,7 +20,7 @@ export type PublicWine = {
   appellation?: Named; appellation_detail?: string; characteristics?: Label[];
 };
 export type PublicMenu = {
-  restaurant: { name: string; slug: string; logo_url?: string; primary_color: string };
+  restaurant: { name: string; slug: string; logo_url?: string; primary_color: string; instagram_url?: string };
   wine_categories: Label[];
   wines: PublicWine[];
   menu: PublicMenuCategory[];
@@ -344,7 +345,7 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
         </section>)}
       </section>)}</div>
       </div>
-      <footer className="boutique-footer" lang="en">Powered by SuPeR Wine &amp; Menu</footer>
+      <PublicFooter lang={lang} instagramUrl={menu.restaurant.instagram_url} />
     </div>
   </main>;
 }

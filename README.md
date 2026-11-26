@@ -37,6 +37,12 @@ Entrambi i file contengono lo stesso URL HTTPS canonico usato dal gestionale, co
 
 Il collaudo manuale è approvato, incluse la scansione da smartphone, l'apertura della carta sul dominio ufficiale da rete mobile e il download. Gli artefatti e i ristoranti dimostrativi appartengono al solo ambiente isolato di collaudo.
 
+## SuPeR Social & Contact
+
+Il footer pubblico offre i contatti istituzionali SuPeR tramite WhatsApp, telefono ed email. Per aggiungere Instagram, aprire **Ristoranti → Impostazioni → Social network**, inserire l'URL HTTPS del profilo e salvare. Per rimuoverlo, svuotare il campo e salvare. Il collegamento compare sopra il footer in tutte le sezioni pubbliche.
+
+La [migrazione Instagram](supabase/migrations/20261126000000_swm_restaurant_instagram.sql) è installata sul Supabase ufficiale. L'amministratore ha confermato 6/6 [controlli post-installazione in sola lettura](supabase/verify/20261126000000_swm_restaurant_instagram.sql). Le carte prive di un profilo conservano la risposta RPC precedente.
+
 ## Supabase
 
 Se manca `.env.local`, creare il file copiando `.env.example`. Nel progetto Supabase ufficiale aprire **Connect** oppure **Settings → API Keys** e compilare:
