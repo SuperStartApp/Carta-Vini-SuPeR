@@ -2,6 +2,8 @@
 
 ## Fase 5.0 · Smart Service
 
+- Pubblicata su Vercel con il rilascio `0da20fa`. In produzione i due login sono raggiungibili e le rotte protette rimandano al login di competenza. La RPC operativa e le due tabelle rifiutano l'accesso anonimo. Le tre carte canoniche hanno risposto HTTP 200, con Calici su Wine Art (2) e Gallo (3) e tab assente al Virgilio. Verificati Menù, abbinamenti e Drink List dove presenti, footer e Instagram.
+- La migrazione e il rilascio non configurano o abilitano locali. Il controllo delle configurazioni effettive richiede lettura amministrativa. Accesso operativo, revoca e cambio permessi con un account reale restano da verificare in un collaudo autorizzato. La rotta QR Studio è risultata protetta. Anteprima ed export sono stati collaudati nell'ambiente isolato.
 - Collaudo grafico e funzionale locale approvato. Login dedicato con sessione separata, selezione dei soli ristoranti autorizzati, permessi informativi e gestione amministrativa di impostazioni e associazioni. Provisioning assistito per UUID Auth verificato.
 - Su PostgreSQL isolato, 7/7 controlli strutturali. Verificati accessi diretti con RLS, separazione tra locali, rifiuto delle scritture sui prodotti e revoca, disattivazione e cambio permessi con JWT invariato. Risposta pubblica invariata sulla fixture.
 - In Chrome verificati i cinque profili, accessi incrociati, login e logout indipendenti da SuPeR, associazione inizialmente disabilitata, revoca e ripristino con sessione aperta. Verificate anche Carta vini, Calici, Menù, Drink List, footer, Instagram e QR Studio nell'ambiente simulato.
