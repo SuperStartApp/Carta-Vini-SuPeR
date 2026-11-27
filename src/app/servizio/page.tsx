@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { ActionForm } from "../../components/action-form";
 import { serviceModules, serviceUuid, type ServiceList, type ServiceModule, type ServiceRestaurant } from "../../lib/service";
 import { sessionClient } from "../../lib/supabase";
-import { serviceLogout } from "./actions";
+import { changeTemporaryServicePassword, serviceLogout } from "./actions";
 import { ServiceProductList } from "./product-list";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +15,21 @@ export default async function ServicePage({ searchParams }: {
   if (!db) return <main className="mx-auto max-w-xl p-4"><p className="error">Smart Service non è disponibile.</p></main>;
   const identity = await db.auth.getUser();
   if (!identity.data.user && (identity.error?.status ?? 0) < 500) redirect("/servizio/login");
-  const result = identity.data.user ? await db.rpc("swm_service_restaurants").setHeader("Cache-Control", "no-store") : null;
+  const credential = identity.data.user ? await db.rpc("swm_service_password_state").setHeader("Cache-Control", "no-store") : null;
+  if (credential?.data === "pending" && !credential.error) return <main className="mx-auto grid min-h-dvh max-w-lg content-center gap-4 p-4">
+    <section className="panel">
+      <h1 className="mb-3 font-serif text-3xl text-bordeaux">Cambia la password temporanea</h1>
+      <ActionForm run={changeTemporaryServicePassword}>
+        <label>Password temporanea<input name="current_password" type="password" autoComplete="current-password" required /></label>
+        <label>Nuova password<input name="password" type="password" autoComplete="new-password" minLength={12} maxLength={72} required /></label>
+        <label>Conferma nuova password<input name="confirm_password" type="password" autoComplete="new-password" minLength={12} maxLength={72} required /></label>
+        <button className="primary">Cambia password</button>
+      </ActionForm>
+    </section>
+    <ActionForm run={serviceLogout}><button className="secondary compact">Esci</button></ActionForm>
+  </main>;
+  const result = identity.data.user && !credential?.error
+    ? await db.rpc("swm_service_restaurants").setHeader("Cache-Control", "no-store") : null;
   const restaurants = (result?.data ?? []) as ServiceRestaurant[];
   const params = await searchParams;
   const { ristorante } = params;

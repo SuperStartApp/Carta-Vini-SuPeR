@@ -197,7 +197,7 @@ async function Restaurants({ id, query }: { id?: string; query: Query }) {
   if (tab === "cocktail") return <RestaurantCard row={row} tab={tab}><RestaurantMenu id={id} kind="cocktail" /></RestaurantCard>;
   if (tab === "link") return <RestaurantCard row={row} tab={tab}><PublicLink url={publicRestaurantUrl(row.slug)} published={row.is_published} /></RestaurantCard>;
   if (tab === "qr") return <RestaurantCard row={row} tab={tab}><RestaurantQr row={row} /></RestaurantCard>;
-  if (tab === "service") return <RestaurantCard row={row} tab={tab}><RestaurantService id={id} /></RestaurantCard>;
+  if (tab === "service") return <RestaurantCard row={row} tab={tab}><RestaurantService id={id} slug={row.slug} /></RestaurantCard>;
   if (tab === "impostazioni") return <RestaurantCard row={row} tab={tab}><section className="panel">
     <RestaurantForm key={`${row.id}:${row.slug}:${row.is_published}`} restaurant={row} />
   </section></RestaurantCard>;

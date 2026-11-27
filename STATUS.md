@@ -1,5 +1,12 @@
 # Stato del progetto
 
+## Fase 5.3 · Smart Service Account Manager
+
+- Pubblicazione approvata. L’amministratore ha applicato manualmente `20261127000003_swm_service_accounts.sql` al Supabase ufficiale e confermato 5/5 controlli. La Secret key dedicata è stata configurata dall’amministratore in Vercel Production. Il primo collaudo con un account di prova autorizzato resta da eseguire.
+- Manuali aggiornati per [database](DATABASE.md), [ambienti](ENVIRONMENT.md), [migrazione](MIGRATION_GUIDE.md), [disaster recovery](DISASTER_RECOVERY.md) e [sicurezza](SECURITY.md).
+- Verificati 5/5 controlli strutturali e l’isolamento SQL, inclusi rollback dell’associazione, blocco delle RPC durante il cambio password e rifiuto dei token precedenti. In Chrome con Auth simulata verificati creazione, email duplicata, compensazione dopo errore, primo accesso, reset multiristorante, revoca per singolo locale, accesso manuale via UUID e regressioni di Calici, Menù, abbinamenti, Drink List e QR Studio. Lint, typecheck e build superati.
+- Fase 5.2, Analytics e Wine Intelligence in standby.
+
 ## Fase 5.1 · Disponibilità operativa Smart Service
 
 - Pubblicata con il rilascio `d145f14`. Vercel riuscito. In produzione entrambi i login rispondono e le rotte riservate, incluso QR Studio e il tab amministrativo Smart Service, rimandano al login corretto. RPC operative di lettura e storico negano l'accesso anonimo. Le tre carte canoniche rispondono HTTP 200. Verificati Calici su Wine Art (2) e Gallo (3), assenza del tab al Virgilio, Menù e abbinamenti dove presenti, Drink List del Gallo, footer e Instagram.
@@ -7,7 +14,7 @@
 - Collaudo grafico e funzionale locale approvato. Disponibilità operativa per Vini, Calici, Menù e Drink con ricerca, filtri, contatori, pagine da 25 e salvataggio per referenza. I prodotti bloccati e le sospensioni non originate da Smart Service restano riservati a SuPeR.
 - Su PostgreSQL isolato, 8/8 controlli strutturali. Verificati transizioni, prezzi e abbinamenti, storico atomico, permessi e revoca con JWT invariato, accessi anonimi e incrociati, scrittura diretta negata e conflitti dello stato atteso anche nei salvataggi SuPeR.
 - In Chrome verificati i quattro moduli a 320 px, filtri, protezioni, due schede con stato concorrente, errore di rete, revoca con sessione aperta, storico in amministrazione e regressioni su carta pubblica, abbinamenti, Calici, Menù, Drink List e QR Studio. Lint, typecheck e build superati.
-- Migrazione applicata manualmente al Supabase ufficiale con 8/8 controlli confermati. Retention proposta di 90 giorni senza job schedulato. Smart Service 5.2–5.3, Analytics e Wine Intelligence restano in standby.
+- Migrazione applicata manualmente al Supabase ufficiale con 8/8 controlli confermati. Retention proposta di 90 giorni senza job schedulato.
 
 ## Fase 5.0 · Smart Service
 

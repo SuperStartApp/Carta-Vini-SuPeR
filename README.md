@@ -39,6 +39,22 @@ Il collaudo manuale è approvato, incluse la scansione da smartphone, l'apertura
 
 ## SuPeR Smart Service
 
+### Fase 5.3 · Account Manager
+
+L’amministratore ha applicato manualmente la migrazione 5.3 al Supabase ufficiale e confermato 5/5 controlli. Ha configurato `SWM_SUPABASE_ADMIN_KEY` come Secret in Vercel Production. La migrazione è già installata.
+
+Per il primo collaudo autorizzato con un account di prova:
+
+1. Scegliere un indirizzo dedicato controllato da SuPeR e un locale di prova autorizzato. Verificare la presenza dell’Account Manager nella scheda Smart Service. Il riferimento tecnico è nella [migrazione 5.3](supabase/migrations/20261127000003_swm_service_accounts.sql) e nei [cinque controlli in sola lettura](supabase/verify/20261127000003_swm_service_accounts.sql).
+2. SuPeR verifica l’identità del referente e apre **Ristoranti → Smart Service → Crea e associa account**. Inserisce il riferimento interno e l’email. L’account nasce confermato e l’associazione disabilitata. Un’email già in uso richiede verifica manuale. L’alternativa tramite UUID resta disponibile.
+3. SuPeR copia link ed email e consegna la password temporanea tramite un canale separato. La password è visibile solo al momento della generazione. SuPeR configura permessi, area e associazione. Al primo accesso il referente deve cambiare la password prima di usare Smart Service.
+4. Per il recupero, SuPeR verifica l’identità del referente e genera una nuova password temporanea dalla stessa area. Il reset riguarda tutti i locali dell’account. **Revoca accesso** agisce sul singolo locale. Il login mostra il contatto WhatsApp SuPeR.
+5. Tenere una sessione aperta in un secondo browser. Dopo il reset verificare che la sessione precedente e la password precedente falliscano, provare il cambio obbligatorio con la nuova temporanea e verificare i permessi in sola lettura. Revocare l’associazione di prova al termine. Eventuali prove multiristorante richiedono locali e associazioni separatamente autorizzati.
+
+Riferimenti tecnici e di portabilità: [Database](DATABASE.md), [Ambienti](ENVIRONMENT.md), [Migrazione](MIGRATION_GUIDE.md), [Disaster recovery](DISASTER_RECOVERY.md) e [Sicurezza](SECURITY.md).
+
+### Accesso e disponibilità operativa
+
 La fase 5.0 introduce l'area ristoratore su `/servizio` con login dedicato e una sezione **Smart Service** nella scheda amministrativa del locale. L'area mostra l'identità del ristorante e le funzionalità abilitate.
 
 La fase 5.1, approvata dopo il collaudo locale, aggiunge la disponibilità operativa nei moduli **Vini**, **Calici**, **Menù** e **Drink**. Gli interruttori salvano subito la singola referenza. I prezzi sono in sola lettura. Le sospensioni preesistenti e i blocchi di SuPeR restano riservati al gestionale. La [migrazione additiva](supabase/migrations/20261127000002_swm_service_availability.sql) e la [verifica post-installazione in sola lettura](supabase/verify/20261127000002_swm_service_availability.sql) sono state verificate. La migrazione è stata applicata manualmente al Supabase ufficiale con 8/8 controlli positivi confermati.
