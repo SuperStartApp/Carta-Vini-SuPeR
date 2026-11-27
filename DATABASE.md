@@ -25,6 +25,7 @@ Gli indici coprono, tra gli altri, le assegnazioni per vino, cantina, regione, d
 | `swm_service_restaurants`, `swm_service_has_access` | Verificano identità, associazione, abilitazione, permessi e stato/versione delle credenziali. |
 | `swm_service_modules`, `swm_service_list`, `swm_service_set_availability` | Operazioni Smart Service protette. Le scritture verificano locale, permesso e stato atteso e registrano lo storico nella stessa transazione. |
 | `swm_service_password_state`, `swm_service_member_emails`, `swm_service_register_account` | Stato credenziali dell’identità corrente, proiezione delle email associate riservata a SuPeR e registrazione atomica riservata a `service_role`. |
+| `swm_service_pairing_dishes`, `swm_service_pairing_wines`, `swm_service_save_pairings` | Fase 5.2. Letture e scrittura circoscritte a `can_pairings`, al locale e al gate delle credenziali. La scrittura confronta i riferimenti attesi, aggiorna `swm_dish_pairings` e inserisce lo storico nella stessa transazione. |
 
 RLS è attiva sulle tabelle applicative. Le policy `swm_admin_access` limitano le operazioni sulle tabelle gestionali a `authenticated` con `app_metadata.swm_admin = true`. `swm_admin_read` riserva la lettura del dizionario allergeni a SuPeR. `swm_service_admin_memberships` e `swm_service_admin_settings` gestiscono configurazione e associazioni. `swm_service_admin_audit_read` e `swm_service_accounts_admin_read` consentono la sola lettura amministrativa diretta di storico e registro. La scrittura delle credenziali è riservata al backend privilegiato. Verificare separatamente grant di tabella ed `EXECUTE`, owner, `SECURITY DEFINER` e `search_path`.
 
@@ -47,3 +48,8 @@ Applicare in ordine lessicografico soltanto su una destinazione nuova. Le defini
 | `20261127000001` | Accessi, associazioni e permessi Smart Service. |
 | `20261127000002` | Disponibilità operativa, concorrenza e storico. |
 | `20261127000003` | Account Manager, registro dedicato e blocco credenziali. L’amministratore ha confermato l’applicazione manuale e 5/5 controlli sul Supabase ufficiale. |
+| `20261127000004` | Abbinamenti Smart Service, tipo `pairings` nello storico e controllo concorrente facoltativo nel JSON `swm_save_dish`. Installata manualmente sul Supabase ufficiale, con 5/5 controlli confermati dall’amministratore. |
+
+Export Studio usa le tabelle e relazioni esistenti con i permessi amministrativi. Non aggiunge oggetti SQL. Lo storico `pairings` rappresenta gli UUID come array JSON testuali in `previous_state` e `new_state`, in ordine di slot.
+
+Le letture di Export Studio usano intervalli da 500 righe con ordinamento deterministico. Il limite `Max Rows` di PostgREST sul progetto ufficiale è 1.000, come verificato dall’amministratore. Una destinazione deve mantenere un limite di almeno 500 per evitare pagine abbreviate interpretate come fine dati.

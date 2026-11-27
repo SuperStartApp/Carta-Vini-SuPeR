@@ -1,12 +1,21 @@
 # Stato del progetto
 
+## Fasi 5.2 e 5.4 · Abbinamenti ed Export Studio
+
+- Pubblicazione congiunta approvata dopo il collaudo manuale di Abbinamenti, Export Studio e indicatore. L’amministratore ha installato `20261127000004_swm_service_pairings.sql` sul database ufficiale e confermato 5/5 controlli e `Max Rows` pari a 1.000. Export Studio non richiede migrazioni. I link canonici del pannello ristoratore sono nella scheda Smart Service anche senza account associati.
+- In PostgreSQL isolato, 5/5 controlli strutturali e prove su zero, uno e due vini, rimozione, concorrenza, revoca, isolamento, accesso anonimo e credenziali non valide, storico e carta pubblica.
+- Chrome con API isolate ha confermato salvataggio, sostituzione, rimozione, revoca con sessione aperta, esportazione completa e parziale, protezione del download e regressioni di Account Manager, area operativa, carta pubblica e QR Studio. Il file dimostrativo di 11 fogli è stato aperto anche in Microsoft Excel. Il test con 12.000 vini e vista Calici ha generato circa 1,31 MB. Verifiche Vercel e PostgREST ospitato in attesa del rilascio autorizzato.
+- Verifica prestazionale in Chrome con API isolate. A freddo in sviluppo, login visibile in 2,73 s e accesso a Vini in altri 0,99 s dopo l’invio. Nella build locale, rispettivamente 0,13 s e 0,14 s. Mediane a caldo su tre passaggi per modulo, nell’ordine Vini, Calici, Menù, Drink, Abbinamenti. Sviluppo 154, 154, 158, 156, 172 ms. Build locale 30, 25, 23, 24, 24 ms. Con 40 ms artificiali per chiamata backend, la build passa a 321, 314, 310, 300, 322 ms. Nessun ricaricamento completo o prefetch dei tab osservato.
+- Durante il cambio tab compare il nome del nuovo modulo in caricamento, mentre l’elenco precedente viene nascosto e il tab precedente perde l’indicazione di selezione. Verificati tutti e cinque i tab in Chrome con latenza simulata, anche tramite tastiera su Abbinamenti. Il mock ha registrato le stesse sei chiamate per passaggio e nessuna a riposo. Superate le regressioni su Account Manager, Smart Service, carta pubblica, QR Studio ed Export Studio.
+- SuPeR Inventory, Analytics e Wine Intelligence in standby.
+
 ## Fase 5.3 · Smart Service Account Manager
 
-- Pubblicata con il rilascio `79d1a3e`. Vercel ha confermato il deploy. L’amministratore ha applicato manualmente `20261127000003_swm_service_accounts.sql` al Supabase ufficiale e confermato 5/5 controlli. La configurazione della Secret key dedicata in Vercel Production è attestata dall’amministratore. La presenza della sezione dopo login e l’operatività della chiave sul progetto ufficiale restano da verificare con il primo collaudo autorizzato.
+- Pubblicata con il rilascio `79d1a3e`. Vercel ha confermato il deploy. L’amministratore ha applicato manualmente `20261127000003_swm_service_accounts.sql` al Supabase ufficiale e confermato 5/5 controlli. La configurazione della Secret key dedicata in Vercel Production è attestata dall’amministratore.
 - In produzione, Chrome ha verificato le tre carte canoniche con HTTP 200 senza redirect. Controllati Calici dove presenti, Menù, Drink List, abbinamenti, footer IT/EN e Instagram. Entrambi i login sono raggiungibili e gestionale, QR Studio e rotte operative protette rimandano al login corretto. Le letture anonime del registro, dello stato password e della proiezione email 5.3 sono state respinte con HTTP 401, come le letture operative e dello storico già protette.
 - Manuali aggiornati per [database](DATABASE.md), [ambienti](ENVIRONMENT.md), [migrazione](MIGRATION_GUIDE.md), [disaster recovery](DISASTER_RECOVERY.md) e [sicurezza](SECURITY.md).
 - Verificati 5/5 controlli strutturali e l’isolamento SQL, inclusi rollback dell’associazione, blocco delle RPC durante il cambio password e rifiuto dei token precedenti. In Chrome con Auth simulata verificati creazione, email duplicata, compensazione dopo errore, primo accesso, reset multiristorante, revoca per singolo locale, accesso manuale via UUID e regressioni di Calici, Menù, abbinamenti, Drink List e QR Studio. Lint, typecheck e build superati.
-- Fase 5.2, Analytics e Wine Intelligence in standby.
+- Primo collaudo reale confermato dall’amministratore per creazione, generazione delle credenziali, cambio password e accesso dopo l’abilitazione dell’associazione. Il reset reale e la revoca dei token precedenti richiedono ancora un collaudo dedicato.
 
 ## Fase 5.1 · Disponibilità operativa Smart Service
 

@@ -75,6 +75,7 @@ function DishEditor({ restaurantId, kind, dish, categories, allergens, options, 
       return result;
     }}>
       {dish && <input type="hidden" name="expected_status" value={dish.status} />}
+      {dish && kind === "menu" && <input type="hidden" name="expected_pairings" value={JSON.stringify(dish.wine_ids)} />}
       <fieldset className="grid gap-3">
         <legend className="mb-2 font-semibold">{drink ? "Informazioni della bevanda" : "Informazioni del piatto"}</legend>
         <div className="fields">

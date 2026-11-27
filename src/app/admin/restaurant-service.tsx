@@ -11,11 +11,24 @@ export async function RestaurantService({ id, slug }: { id: string; slug: string
   const { db } = await requireAdmin();
   const origin = publicRestaurantUrl(slug);
   const login = origin ? new URL("/servizio/login", origin).href : null;
+  const panelLink = <section className="panel">
+    <h2>Pannello ristoratore</h2>
+    <div className="mt-2 flex flex-wrap items-start gap-2">
+      {login ? <>
+        <a className="secondary compact" href={login} target="_blank" rel="noopener noreferrer">Apri pannello ristoratore</a>
+        <ServiceLoginCopy login={login} email={null} label="Copia link pannello ristoratore" />
+      </> : <>
+        <button type="button" className="secondary compact" disabled>Apri pannello ristoratore</button>
+        <button type="button" className="secondary compact" disabled>Copia link pannello ristoratore</button>
+      </>}
+    </div>
+    {!login && <p className="note mt-2">Configurare il dominio canonico per usare il link.</p>}
+  </section>;
   const accountManager = Boolean(process.env.SWM_SUPABASE_ADMIN_KEY?.trim());
   let accounts = new Map<string, { email: string | null; managed: boolean }>();
   let memberships: ServiceMembership[];
   let settings: ServiceSettings | null;
-  let history: { id: string; kind: ServiceModule; product_id: string; user_id: string; previous_state: string; new_state: string; occurred_at: string }[] | null = null;
+  let history: { id: string; kind: ServiceModule | "pairings"; product_id: string; user_id: string; previous_state: string; new_state: string; occurred_at: string }[] | null = null;
   try {
     const [result, rows, audit, emails] = await Promise.all([
       db.from("swm_service_settings").select("*").eq("restaurant_id", id).maybeSingle(),
@@ -32,12 +45,13 @@ export async function RestaurantService({ id, slug }: { id: string; slug: string
     if (!audit.error) history = audit.data;
     accounts = new Map(emails.map(row => [row.user_id, row]));
   } catch {
-    return <p className="panel error">Impossibile leggere la configurazione Smart Service. Verifica la migrazione della fase 5.0.</p>;
+    return <div className="grid gap-4">{panelLink}<p className="panel error">Impossibile leggere la configurazione Smart Service.</p></div>;
   }
   return <div className="grid gap-4">
+    {panelLink}
     <section className="panel">
       <h2>Configurazione Smart Service</h2>
-      <p className="note mb-3">Area {settings?.enabled ? "attiva" : "disattivata"}. Gli abbinamenti operativi saranno disponibili in una fase successiva.</p>
+      <p className="note mb-3">Area {settings?.enabled ? "attiva" : "disattivata"}.</p>
       <ActionForm run={saveServiceSettings.bind(null, id)}>
         <label className="check-field"><input name="enabled" type="checkbox" defaultChecked={settings?.enabled} /> Attiva area ristoratore</label>
         <fieldset className="grid gap-2">
@@ -88,7 +102,7 @@ export async function RestaurantService({ id, slug }: { id: string; slug: string
     <section className="panel">
       <h2>Ultime modifiche operative</h2>
       {history?.length ? <ul className="record-list">{history.map(entry => <li className="py-2 wrap-break-word" key={entry.id}>
-        <strong>{serviceModules[entry.kind]} · {entry.previous_state} → {entry.new_state}</strong>
+        <strong>{entry.kind === "pairings" ? "Abbinamenti" : serviceModules[entry.kind]} · {entry.previous_state} → {entry.new_state}</strong>
         <p className="note">Referenza {entry.product_id} · {memberships.find(row => row.user_id === entry.user_id)?.label ?? entry.user_id}</p>
         <time className="note" dateTime={entry.occurred_at}>{new Intl.DateTimeFormat("it-IT", {
           dateStyle: "short", timeStyle: "short", timeZone: "Europe/Rome",

@@ -5,6 +5,7 @@ import { Circle, Cylinder, Droplets, Grape, Leaf, Search, Sparkles, Wine, WineOf
 import type { Label } from "../lib/models";
 import type { PublicCocktailCategory, PublicMenuCategory } from "../lib/menu";
 import { searchable } from "../lib/search";
+import { regionRank } from "../lib/wine-geography";
 import { emptyFilters, selectFilters, WineFilterPanel, type FilterOptions, type SelectFilter, type WineFilters } from "./public-wine-filters";
 import { PublicDishes } from "./public-dishes";
 import { PublicFooter } from "./public-footer";
@@ -56,19 +57,6 @@ const copy = {
 
 function label(item: Label, lang: Language) {
   return translated(item.name_it, item.name_en, lang);
-}
-
-const regionKey = (name: string) => searchable(name).replace(/[^a-z]/g, "");
-const italianRegions = new Map([
-  "Piemonte", "Valle d'Aosta", "Liguria", "Lombardia", "Trentino-Alto Adige", "Veneto", "Friuli Venezia Giulia",
-  "Emilia-Romagna", "Toscana", "Umbria", "Marche", "Lazio", "Abruzzo", "Molise", "Campania", "Puglia",
-  "Basilicata", "Calabria", "Sicilia", "Sardegna",
-].map((name, index) => [regionKey(name), index]));
-
-function regionRank(name: string) {
-  const key = regionKey(name).replace(/^valledaostavalleedaoste$/, "valledaosta")
-    .replace(/^trentinoaltoadigesudtirol$/, "trentinoaltoadige");
-  return italianRegions.get(key) ?? italianRegions.size;
 }
 
 function groups(wines: PublicWine[]) {

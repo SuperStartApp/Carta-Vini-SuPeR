@@ -19,3 +19,5 @@
 - **Cambio progetto.** Prima della riapertura delle scritture si può tornare al deploy con la connessione di origine. Se la destinazione ha già ricevuto scritture, sospendere le modifiche, acquisire entrambe le copie e riconciliare dati, ID e storia Auth prima del ritorno. Il solo rollback dell’app non riconcilia i dati.
 
 Backup disponibili, RPO, RTO e ripristino del progetto ufficiale sono da verificare con l’amministratore. Questo runbook non attesta un ripristino eseguito.
+
+In un ripristino successivo alla 5.2 confrontare `swm_dish_pairings` per locale, piatto e slot e verificare gli eventi `pairings` in `swm_service_audit_log`. I workbook Export Studio non sono backup ripristinabili. Si rigenerano dalle tabelle sorgenti dopo aver verificato integrità e permessi.

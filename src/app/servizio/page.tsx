@@ -5,6 +5,9 @@ import { serviceModules, serviceUuid, type ServiceList, type ServiceModule, type
 import { sessionClient } from "../../lib/supabase";
 import { changeTemporaryServicePassword, serviceLogout } from "./actions";
 import { ServiceProductList } from "./product-list";
+import { PairingList } from "./pairing-list";
+import { ServiceTabs } from "./service-tabs";
+import type { PairingList as PairingData } from "../../lib/service-pairings";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +42,8 @@ export default async function ServicePage({ searchParams }: {
       ? restaurants.find(row => row.id === ristorante.toLowerCase()) : undefined;
   const denied = !restaurants.length || (ristorante !== undefined && !selected);
   const moduleResult = selected ? await db.rpc("swm_service_modules", { target_restaurant: selected.id }) : null;
-  const modules = ((moduleResult?.data ?? []) as ServiceModule[]).filter(kind => Object.hasOwn(serviceModules, kind));
+  const modules: (ServiceModule | "pairings")[] = ((moduleResult?.data ?? []) as ServiceModule[]).filter(kind => Object.hasOwn(serviceModules, kind));
+  if (selected?.can_pairings) modules.push("pairings");
   const kind = params.modulo === undefined ? modules[0] : modules.find(key => key === params.modulo);
   const q = typeof params.q === "string" ? params.q.slice(0, 100) : "";
   const category = typeof params.categoria === "string" && serviceUuid.test(params.categoria) ? params.categoria.toLowerCase() : "";
@@ -47,19 +51,26 @@ export default async function ServicePage({ searchParams }: {
     ? params.stato : "all";
   const requestedPage = typeof params.pagina === "string" && /^\d{1,5}$/.test(params.pagina) ? Number(params.pagina) : 1;
   const page = Math.min(10000, Math.max(1, requestedPage));
-  const listResult = selected && kind ? await db.rpc("swm_service_list", {
+  const pairingFilter = params.abbinati === "with" || params.abbinati === "without" ? params.abbinati : "all";
+  const pairingResult = selected && kind === "pairings" ? await db.rpc("swm_service_pairing_dishes", {
+    target_restaurant: selected.id, search_text: q, target_category: category || null,
+    pairing_filter: pairingFilter, page_number: page,
+  }) : null;
+  const pairings = pairingResult?.data as PairingData | undefined;
+  const listResult = selected && kind && kind !== "pairings" ? await db.rpc("swm_service_list", {
     target_restaurant: selected.id, target_kind: kind, search_text: q,
     target_category: category || null, availability, page_number: page,
   }) : null;
   const list = listResult?.data as ServiceList | null | undefined;
-  const pages = Math.max(1, Math.ceil((list?.total ?? 0) / 25));
-  const link = (modulo: ServiceModule, pagina?: number) => {
+  const pages = Math.max(1, Math.ceil((pairings?.total ?? list?.total ?? 0) / 25));
+  const link = (modulo: ServiceModule | "pairings", pagina?: number) => {
     const query = new URLSearchParams({ ristorante: selected?.id ?? "", modulo });
     if (pagina) {
       query.set("pagina", String(pagina));
       if (q) query.set("q", q);
       if (category) query.set("categoria", category);
       if (availability !== "all") query.set("stato", availability);
+      if (pairingFilter !== "all") query.set("abbinati", pairingFilter);
     }
     return `/servizio?${query}`;
   };
@@ -79,12 +90,26 @@ export default async function ServicePage({ searchParams }: {
       </nav>}
       {selected && <section className="panel grid min-w-0 gap-3">
         <h2>{selected.name}</h2>
-        {modules.length > 0 && <nav className="tabs min-w-0" aria-label="Moduli operativi">
-          {modules.map(key => <Link key={key} href={link(key)} prefetch={false} aria-current={key === kind ? "page" : undefined}>
-            {serviceModules[key]}
-          </Link>)}
-        </nav>}
-        {list && kind ? <>
+        <ServiceTabs key={selected.id} active={kind} tabs={modules.map(key => ({
+          id: key, href: link(key), label: key === "pairings" ? "Abbinamenti" : serviceModules[key],
+        }))}>
+        {pairings && kind === "pairings" ? <>
+          <form action="/servizio" key={`${selected.id}:${q}:${category}:${pairingFilter}`} className="grid gap-3">
+            <input type="hidden" name="ristorante" value={selected.id} />
+            <input type="hidden" name="modulo" value="pairings" />
+            <label>Cerca piatto<input type="search" name="q" maxLength={100} defaultValue={q} /></label>
+            <div className="fields">
+              <label>Categoria<select name="categoria" defaultValue={category}><option value="">Tutte</option>
+                {pairings.categories.map(row => <option key={row.id} value={row.id}>{row.name}</option>)}
+              </select></label>
+              <label>Abbinamenti<select name="abbinati" defaultValue={pairingFilter}>
+                <option value="all">Tutti</option><option value="with">Con abbinamenti</option><option value="without">Senza abbinamenti</option>
+              </select></label>
+            </div>
+            <button className="secondary justify-self-start">Applica filtri</button>
+          </form>
+          <PairingList key={`${selected.id}:${page}:${q}:${category}:${pairingFilter}`} restaurant={selected.id} dishes={pairings.items} />
+        </> : list && kind && kind !== "pairings" ? <>
           <form action="/servizio" key={`${selected.id}:${kind}:${q}:${category}:${availability}`} className="grid gap-3">
             <input type="hidden" name="ristorante" value={selected.id} />
             <input type="hidden" name="modulo" value={kind} />
@@ -104,15 +129,16 @@ export default async function ServicePage({ searchParams }: {
           </form>
           <ServiceProductList key={`${selected.id}:${kind}:${page}:${q}:${category}:${availability}`}
             restaurant={selected.id} kind={kind} list={list} />
-          {(pages > 1 || page > 1) && <nav className="flex flex-wrap items-center gap-2" aria-label="Paginazione referenze">
+        </> : moduleResult?.error || listResult?.error || pairingResult?.error
+          ? <p className="error" role="alert">Modulo non disponibile o accesso revocato. Ricarica la pagina.</p>
+          : <p className="note">{modules.length ? "Questo modulo non è autorizzato per il locale."
+            : "SuPeR non ha ancora abilitato funzionalità operative per questo ristorante."}</p>}
+          {kind && (list || pairings) && (pages > 1 || page > 1) && <nav className="flex flex-wrap items-center gap-2" aria-label="Paginazione referenze">
             {page > 1 && <Link prefetch={false} className="secondary compact" href={link(kind, Math.min(page - 1, pages))}>Precedente</Link>}
             <span className="note">Pagina {page} di {pages}</span>
             {page < pages && page < 10000 && <Link prefetch={false} className="secondary compact" href={link(kind, page + 1)}>Successiva</Link>}
           </nav>}
-        </> : moduleResult?.error || listResult?.error
-          ? <p className="error" role="alert">Modulo non disponibile o accesso revocato. Ricarica la pagina.</p>
-          : <p className="note">{modules.length ? "Questo modulo non è autorizzato per il locale."
-            : "SuPeR non ha ancora abilitato funzionalità operative per questo ristorante."}</p>}
+        </ServiceTabs>
       </section>}
     </div>
   </main>;

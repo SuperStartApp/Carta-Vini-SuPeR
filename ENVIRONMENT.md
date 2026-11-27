@@ -12,3 +12,7 @@
 In locale partire da `.env.example`, usare `.env.local` escluso da Git e puntare a un database isolato per le prove di scrittura. In Preview usare un progetto isolato. Lasciare la chiave amministrativa assente negli ambienti senza provisioning autorizzato. In Production verificare insieme URL Supabase e chiavi dello stesso progetto. Le variabili `NEXT_PUBLIC_` possono essere incorporate nella build. Cambi di progetto o di chiave richiedono una nuova build e un nuovo deploy.
 
 Verificare il solo nome, l’ambito e lo stato della configurazione nel pannello Vercel. Per confermare che la chiave acceda davvero al progetto servono un controllo privilegiato in sola lettura autorizzato o il collaudo dell’Account Manager. La presenza della sezione dopo login SuPeR dimostra che il server rileva la variabile. Tenere separati i segreti di connessione PostgreSQL, le credenziali CLI e gli eventuali segreti di backup. L’app non usa queste credenziali per funzionare.
+
+Le fasi 5.2 e 5.4 non richiedono nuove variabili. Export Studio usa il runtime Node.js e la sessione SuPeR. Il download è limitato a 4.000.000 byte per restare sotto il limite di payload delle funzioni Vercel. Il limite e i tempi del piano effettivo si verificano dopo autorizzazione al deploy.
+
+`Max Rows` si imposta nelle configurazioni Data API di Supabase. Export Studio richiede almeno 500 righe per risposta. Conservare il valore 1.000 confermato dall’amministratore sul progetto ufficiale anche nella configurazione della futura destinazione, salvo verifica di un valore alternativo compatibile.

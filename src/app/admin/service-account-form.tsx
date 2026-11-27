@@ -5,7 +5,7 @@ import { ActionForm, type ActionResult } from "../../components/action-form";
 
 type Issued = { email: string; password: string };
 
-export function ServiceLoginCopy({ login, email }: { login: string; email: string | null }) {
+export function ServiceLoginCopy({ login, email, label }: { login: string; email: string | null; label?: string }) {
   const [notice, setNotice] = useState("");
   return <div>
     <button type="button" className="secondary compact" onClick={async () => {
@@ -15,7 +15,7 @@ export function ServiceLoginCopy({ login, email }: { login: string; email: strin
       } catch {
         setNotice(login);
       }
-    }}>{email ? "Copia link ed email" : "Copia link di accesso"}</button>
+    }}>{label ?? (email ? "Copia link ed email" : "Copia link di accesso")}</button>
     {notice && <p className="note select-all break-all" role="status">{notice}</p>}
   </div>;
 }

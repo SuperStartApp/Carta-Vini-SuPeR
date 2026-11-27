@@ -16,6 +16,10 @@ Le sessioni del gestionale e di Smart Service usano cookie separati. Il cookie o
 - La rotazione passa da `changing` prima di aggiornare Auth. Dopo un reset lo stato diventa `pending`. Diventa `ready` dopo il cambio confermato. L’aggiornamento amministrativo di Supabase Auth revoca le sessioni dell’utente. Il confronto della versione in SQL blocca anche JWT precedenti ancora validi. Se l’esito di rotazione è incerto, verificare lo stato prima di riprovare. Un account può avere più membership. Il reset è globale e la revoca per locale.
 - La creazione conferma direttamente l’utente. Il sistema non usa flussi di recupero SMTP. Le configurazioni condivise Auth, SMTP e template restano di competenza dell’amministratore del progetto.
 
+## Abbinamenti ed Export Studio
+
+Le RPC degli abbinamenti applicano sessione, credenziali, membership, area e permesso dedicato. La scrittura verifica coerentemente piatto, assegnazioni, disponibilità delle nuove scelte e stato atteso. La cancellazione e il reinserimento dei legami e l’audit sono nella stessa transazione. I valori sorgente dell’export sono inseriti come celle di testo o numeri, senza formule generate da input. Il POST di download verifica direttamente la sessione amministrativa, usa RLS, restituisce `private, no-store` e non legge la Secret key 5.3.
+
 ## Gestione delle chiavi
 
 Usare una Secret key dedicata solo in Production e una chiave pubblicabile per i client ordinari. Evitare logging di header, payload di credenziali, dump e screenshot delle impostazioni. Tenere segreti fuori da Git, `NEXT_PUBLIC_`, risposte e telemetria. In caso di esposizione, revocare la chiave, sostituirla, ridistribuire e verificare gli accessi autorizzati. Per un nuovo progetto generare chiavi nuove. Vedere [ENVIRONMENT.md](ENVIRONMENT.md).

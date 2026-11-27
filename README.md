@@ -39,6 +39,18 @@ Il collaudo manuale è approvato, incluse la scansione da smartphone, l'apertura
 
 ## SuPeR Smart Service
 
+### Fasi 5.2 e 5.4 · Abbinamenti ed Export Studio
+
+L’amministratore ha approvato il collaudo manuale e l’indicatore di caricamento, installato la migrazione 5.2 sul Supabase ufficiale e confermato 5/5 controlli. Il progetto ufficiale ha `Max Rows` pari a 1.000. Export Studio legge pagine da 500 righe e richiede un limite di almeno 500 anche in un futuro progetto dedicato.
+
+In **Ristoranti → Smart Service** i comandi per aprire e copiare il link del pannello sono disponibili anche senza account associati. Abilitando **Abbinamenti gastronomici** per un locale con associazione attiva, il ristoratore può filtrare i piatti e assegnare fino a due vini disponibili del locale. I vini sospesi già associati restano visibili e rimovibili. Il salvataggio riguarda il singolo piatto. Se un’altra sessione ha cambiato gli abbinamenti, ricaricare il piatto.
+
+Durante il cambio tab, Smart Service mostra il nome del modulo in caricamento e nasconde l’elenco precedente fino all’arrivo del nuovo. Il feedback non richiede chiamate aggiuntive.
+
+In **Ristoranti → Export Studio**, scegliere sezioni, disponibilità e colonne facoltative per l’inventario e scaricare il file `.xlsx`. I calici sono una vista delle referenze con prezzo calice positivo e non duplicano le quantità. La selezione di disponibilità considera lo stato della bottiglia, della mescita o dell’abbinamento a seconda del foglio. Le categorie senza referenze nel filtro sono omesse. Le aree selezionate ma vuote hanno un foglio con intestazioni.
+
+Per il collaudo usare un Supabase isolato o le API dimostrative locali. Applicare su un database isolato la [migrazione 5.2](supabase/migrations/20261127000004_swm_service_pairings.sql) e usare i [controlli in sola lettura](supabase/verify/20261127000004_swm_service_pairings.sql). Provare un piatto con zero, uno e due vini, rimozione e sostituzione, un vino sospeso, due schede con lo stesso piatto e revoca del permesso con la sessione aperta. Con un amministratore esportare tutte le aree e poi soltanto Calici o Menù, confrontare i dati e controllare Riepilogo, filtri e colonne inventario. Provare il rifiuto del download come utente Smart Service.
+
 ### Fase 5.3 · Account Manager
 
 L’amministratore ha applicato manualmente la migrazione 5.3 al Supabase ufficiale e confermato 5/5 controlli. Ha configurato `SWM_SUPABASE_ADMIN_KEY` come Secret in Vercel Production. La migrazione è già installata.

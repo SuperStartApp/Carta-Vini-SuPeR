@@ -22,3 +22,7 @@ Questa procedura va provata su un progetto di destinazione isolato. La separazio
 3. Nella finestra autorizzata sospendere le scritture SuPeR, acquisire lo snapshot finale e ripetere i controlli. Annotare commit, snapshot, ambiente e punto di ritorno. Dopo il deploy controllare i link canonici e riaprire le scritture solo a verifica conclusa. Per il ritorno e la gestione delle eventuali scritture divergenti seguire [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md).
 
 Il trasferimento completo, il ripristino delle identità e il cambio progetto non sono stati eseguiti sul database ufficiale.
+
+Con la 5.2 verificare anche `can_pairings`, lo storico `pairings`, l’ordine degli slot e la coerenza con la carta pubblica. Con la 5.4 confrontare i workbook campione tra origine e destinazione. Gli export scaricati restano presso chi li ha generati. Il trasferimento applicativo non include file Excel.
+
+Verificare `Max Rows` nelle impostazioni Data API di destinazione prima del collaudo. Riprodurre il valore 1.000 dell’origine o assicurare almeno 500 righe per le pagine Export Studio. Provare in isolamento un locale con più di 1.000 referenze e confrontare il totale del file con quello effettivo alla fonte. Verificare le tre nuove RPC con un account dedicato, una revoca del permesso e un token precedente al reset.

@@ -37,7 +37,7 @@ function name(form: FormData) {
 
 function check(error: { code?: string } | null, categoryDelete = false) {
   if (!error) return;
-  if (error.code === "40001") throw new Error("La disponibilità è cambiata. Ricarica l’elenco prima di riprovare.");
+  if (error.code === "40001") throw new Error("Disponibilità o abbinamenti aggiornati da un altro utente. Ricarica l’elenco prima di riprovare.");
   if (error.code === "PGRST202") throw new Error("L’operazione richiede l’installazione della migrazione del modulo.");
   if (error.code === "23505") throw new Error("Esiste già una voce con questi dati.");
   if (categoryDelete && ["23503", "23001"].includes(error.code ?? "")) throw new Error("Sposta o elimina le voci prima di eliminare la categoria.");
@@ -75,6 +75,8 @@ export async function saveDish(restaurantId: string, dishId: string | null, form
       description_it: field(form, "description_it") || null, description_en: field(form, "description_en") || null,
       price: price(form), status: status(form),
       ...(dishId && form.has("expected_status") ? { expected_status: field(form, "expected_status") } : {}),
+      ...(dishId && kind === "menu" && form.has("expected_pairings")
+        ? { expected_pairings: JSON.parse(field(form, "expected_pairings")) } : {}),
     };
     const result = kind === "cocktail"
       ? await db.rpc("swm_save_cocktail", { cocktail_data: row, allergen_ids: allergenIds })
