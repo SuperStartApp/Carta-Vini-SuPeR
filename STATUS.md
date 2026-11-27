@@ -1,5 +1,12 @@
 # Stato del progetto
 
+## Fase 5.1 · Disponibilità operativa Smart Service
+
+- Collaudo grafico e funzionale locale approvato. Disponibilità operativa per Vini, Calici, Menù e Drink con ricerca, filtri, contatori, pagine da 25 e salvataggio per referenza. I prodotti bloccati e le sospensioni non originate da Smart Service restano riservati a SuPeR.
+- Su PostgreSQL isolato, 8/8 controlli strutturali. Verificati transizioni, prezzi e abbinamenti, storico atomico, permessi e revoca con JWT invariato, accessi anonimi e incrociati, scrittura diretta negata e conflitti dello stato atteso anche nei salvataggi SuPeR.
+- In Chrome verificati i quattro moduli a 320 px, filtri, protezioni, due schede con stato concorrente, errore di rete, revoca con sessione aperta, storico in amministrazione e regressioni su carta pubblica, abbinamenti, Calici, Menù, Drink List e QR Studio. Lint, typecheck e build superati.
+- Migrazione applicata manualmente al Supabase ufficiale con 8/8 controlli confermati. Retention proposta di 90 giorni senza job schedulato. Smart Service 5.2–5.3, Analytics e Wine Intelligence restano in standby.
+
 ## Fase 5.0 · Smart Service
 
 - Pubblicata su Vercel con il rilascio `0da20fa`. In produzione i due login sono raggiungibili e le rotte protette rimandano al login di competenza. La RPC operativa e le due tabelle rifiutano l'accesso anonimo. Le tre carte canoniche hanno risposto HTTP 200, con Calici su Wine Art (2) e Gallo (3) e tab assente al Virgilio. Verificati Menù, abbinamenti e Drink List dove presenti, footer e Instagram.
@@ -7,7 +14,7 @@
 - Collaudo grafico e funzionale locale approvato. Login dedicato con sessione separata, selezione dei soli ristoranti autorizzati, permessi informativi e gestione amministrativa di impostazioni e associazioni. Provisioning assistito per UUID Auth verificato.
 - Su PostgreSQL isolato, 7/7 controlli strutturali. Verificati accessi diretti con RLS, separazione tra locali, rifiuto delle scritture sui prodotti e revoca, disattivazione e cambio permessi con JWT invariato. Risposta pubblica invariata sulla fixture.
 - In Chrome verificati i cinque profili, accessi incrociati, login e logout indipendenti da SuPeR, associazione inizialmente disabilitata, revoca e ripristino con sessione aperta. Verificate anche Carta vini, Calici, Menù, Drink List, footer, Instagram e QR Studio nell'ambiente simulato.
-- Migrazione installata manualmente sul Supabase ufficiale con 7/7 controlli post-installazione confermati. Smart Service 5.1–5.3, Analytics e Wine Intelligence restano in standby.
+- Migrazione installata manualmente sul Supabase ufficiale con 7/7 controlli post-installazione confermati.
 
 ## Fasi 4.10 e 4.11 · SuPeR Vini al calice
 

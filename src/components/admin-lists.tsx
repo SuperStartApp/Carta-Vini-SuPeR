@@ -255,6 +255,7 @@ export function AssignmentBoard({ restaurantId, wines, assignments, refs, catego
             if (form.get("operation") === "remove" && !window.confirm("Rimuovere il vino e i relativi abbinamenti da questa carta?")) return;
             return changeAssignment(restaurantId, row.wine_id, form);
           }}>
+            <input type="hidden" name="expected_status" value={row.status} />
             <div className="flex gap-2 justify-between flex-wrap">
               <strong>{wine?.name ?? "Vino"}{wine?.vintage ? ` · ${wine.vintage}` : ""}</strong>
               <span className="note">{wine && wineries.get(wine.winery_id)}</span>

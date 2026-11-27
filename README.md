@@ -39,7 +39,13 @@ Il collaudo manuale è approvato, incluse la scansione da smartphone, l'apertura
 
 ## SuPeR Smart Service
 
-La fase 5.0 introduce l'area ristoratore su `/servizio` con login dedicato e una sezione **Smart Service** nella scheda amministrativa del locale. L'area mostra l'identità del ristorante e le funzionalità abilitate. Le operazioni sui prodotti appartengono alle fasi successive.
+La fase 5.0 introduce l'area ristoratore su `/servizio` con login dedicato e una sezione **Smart Service** nella scheda amministrativa del locale. L'area mostra l'identità del ristorante e le funzionalità abilitate.
+
+La fase 5.1, approvata dopo il collaudo locale, aggiunge la disponibilità operativa nei moduli **Vini**, **Calici**, **Menù** e **Drink**. Gli interruttori salvano subito la singola referenza. I prezzi sono in sola lettura. Le sospensioni preesistenti e i blocchi di SuPeR restano riservati al gestionale. La [migrazione additiva](supabase/migrations/20261127000002_swm_service_availability.sql) e la [verifica post-installazione in sola lettura](supabase/verify/20261127000002_swm_service_availability.sql) sono state verificate. La migrazione è stata applicata manualmente al Supabase ufficiale con 8/8 controlli positivi confermati.
+
+Retention proposta per lo storico operativo di **90 giorni**. Dopo approvazione, l'amministratore del database può prima contare le righe di `swm_service_audit_log` anteriori alla soglia e poi cancellarle in lotti ordinati per `occurred_at`, limitati a 5.000 righe, fuori dalle ore di punta. La procedura riguarda solo lo storico Smart Service. Nessun job è installato.
+
+In produzione, elenco operativo, modifiche e revoca con sessione aperta richiedono un account Auth autorizzato e un collaudo dedicato. La consultazione dello storico e la verifica delle configurazioni richiedono una sessione SuPeR.
 
 La [migrazione](supabase/migrations/20261127000001_swm_smart_service_access.sql) è stata applicata manualmente al Supabase ufficiale. L'amministratore ha confermato 7/7 [controlli post-installazione](supabase/verify/20261127000001_swm_smart_service_access.sql). Il provisioning resta assistito.
 

@@ -74,6 +74,7 @@ function DishEditor({ restaurantId, kind, dish, categories, allergens, options, 
       onSaved(result.id, result.success);
       return result;
     }}>
+      {dish && <input type="hidden" name="expected_status" value={dish.status} />}
       <fieldset className="grid gap-3">
         <legend className="mb-2 font-semibold">{drink ? "Informazioni della bevanda" : "Informazioni del piatto"}</legend>
         <div className="fields">
@@ -239,6 +240,7 @@ export function MenuBoard({ restaurantId, kind, dishes, categories, allergens, o
               if (form.get("operation") === "delete" && !window.confirm(`Eliminare «${dish.name_it}»?`)) return Promise.resolve();
               return changeDish(restaurantId, dish.id, form, kind);
             }}>
+              <input type="hidden" name="expected_status" value={dish.status} />
               <div className="fields three">
                 <label>Prezzo (€)<PriceInput value={dish.price} /></label>
                 <label>Stato<select name="status" defaultValue={dish.status}><StatusOptions /></select></label>

@@ -37,6 +37,7 @@ function name(form: FormData) {
 
 function check(error: { code?: string } | null, categoryDelete = false) {
   if (!error) return;
+  if (error.code === "40001") throw new Error("La disponibilità è cambiata. Ricarica l’elenco prima di riprovare.");
   if (error.code === "PGRST202") throw new Error("L’operazione richiede l’installazione della migrazione del modulo.");
   if (error.code === "23505") throw new Error("Esiste già una voce con questi dati.");
   if (categoryDelete && ["23503", "23001"].includes(error.code ?? "")) throw new Error("Sposta o elimina le voci prima di eliminare la categoria.");
@@ -73,6 +74,7 @@ export async function saveDish(restaurantId: string, dishId: string | null, form
       name_it: name(form), name_en: field(form, "name_en") || null,
       description_it: field(form, "description_it") || null, description_en: field(form, "description_en") || null,
       price: price(form), status: status(form),
+      ...(dishId && form.has("expected_status") ? { expected_status: field(form, "expected_status") } : {}),
     };
     const result = kind === "cocktail"
       ? await db.rpc("swm_save_cocktail", { cocktail_data: row, allergen_ids: allergenIds })
@@ -107,8 +109,12 @@ export async function changeDish(restaurantId: string, dishId: string, form: For
       refresh(restaurantId);
       return { success: drink ? "Copia creata come bevanda sospesa." : "Copia creata come piatto sospeso." };
     }
-    const query = operation === "delete" ? table.delete() : table.update({ price: price(form), status: status(form), position: position(form) });
-    check((await query.eq("restaurant_id", restaurantId).eq("id", dishId).select("id").single()).error);
+    let query = operation === "delete" ? table.delete() : table.update({ price: price(form), status: status(form), position: position(form) });
+    const expected = field(form, "expected_status");
+    if (operation !== "delete" && Object.hasOwn(statuses, expected)) query = query.eq("status", expected);
+    const { data, error } = await query.eq("restaurant_id", restaurantId).eq("id", dishId).select("id").maybeSingle();
+    check(error);
+    if (!data) throw new Error("La voce è cambiata o è stata rimossa. Ricarica l’elenco prima di riprovare.");
     refresh(restaurantId);
     if (drink) return { success: operation === "delete" ? "Bevanda eliminata." : "Bevanda aggiornata." };
     return { success: operation === "delete" ? "Piatto eliminato." : "Piatto aggiornato." };

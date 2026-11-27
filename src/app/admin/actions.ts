@@ -298,9 +298,14 @@ export async function changeAssignment(restaurantId: string, wineId: string, for
   try {
     const table = db.from("swm_restaurant_wines");
     const remove = form.get("operation") === "remove";
-    const query = remove ? table.delete() : table.update(assignment(form));
-    const { error } = await query.eq("restaurant_id", restaurantId).eq("wine_id", wineId).select("wine_id").single();
+    let query = remove ? table.delete() : table.update(assignment(form));
+    const expected = form.get("expected_status");
+    if (!remove && typeof expected === "string" && Object.hasOwn(statuses, expected)) query = query.eq("status", expected);
+    const initialGlass = form.get("initial_glass_enabled");
+    if (!remove && (initialGlass === "true" || initialGlass === "false")) query = query.eq("glass_enabled", initialGlass === "true");
+    const { data, error } = await query.eq("restaurant_id", restaurantId).eq("wine_id", wineId).select("wine_id").maybeSingle();
     check(error);
+    if (!data) throw new Error("La referenza è cambiata o è stata rimossa. Ricarica la carta prima di riprovare.");
     revalidatePath(`/admin/ristoranti/${restaurantId}`);
     return { success: remove ? "Vino rimosso dalla carta." : "Carta aggiornata." };
   } catch (error) { return message(error); }
