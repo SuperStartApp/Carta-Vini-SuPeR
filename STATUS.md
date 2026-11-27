@@ -2,6 +2,8 @@
 
 ## Fase 5.1 · Disponibilità operativa Smart Service
 
+- Pubblicata con il rilascio `d145f14`. Vercel riuscito. In produzione entrambi i login rispondono e le rotte riservate, incluso QR Studio e il tab amministrativo Smart Service, rimandano al login corretto. RPC operative di lettura e storico negano l'accesso anonimo. Le tre carte canoniche rispondono HTTP 200. Verificati Calici su Wine Art (2) e Gallo (3), assenza del tab al Virgilio, Menù e abbinamenti dove presenti, Drink List del Gallo, footer e Instagram.
+- Migrazione e rilascio non attivano locali. La rilettura delle configurazioni effettive, la consultazione dello storico e anteprima ed export QR richiedono una sessione SuPeR. Elenco operativo, cambi di disponibilità e revoca in produzione richiedono un account reale autorizzato e un collaudo dedicato.
 - Collaudo grafico e funzionale locale approvato. Disponibilità operativa per Vini, Calici, Menù e Drink con ricerca, filtri, contatori, pagine da 25 e salvataggio per referenza. I prodotti bloccati e le sospensioni non originate da Smart Service restano riservati a SuPeR.
 - Su PostgreSQL isolato, 8/8 controlli strutturali. Verificati transizioni, prezzi e abbinamenti, storico atomico, permessi e revoca con JWT invariato, accessi anonimi e incrociati, scrittura diretta negata e conflitti dello stato atteso anche nei salvataggi SuPeR.
 - In Chrome verificati i quattro moduli a 320 px, filtri, protezioni, due schede con stato concorrente, errore di rete, revoca con sessione aperta, storico in amministrazione e regressioni su carta pubblica, abbinamenti, Calici, Menù, Drink List e QR Studio. Lint, typecheck e build superati.
