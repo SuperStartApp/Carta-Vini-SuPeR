@@ -20,7 +20,7 @@ export type PublicWine = {
   appellation?: Named; appellation_detail?: string; characteristics?: Label[];
 };
 export type PublicMenu = {
-  restaurant: { name: string; slug: string; logo_url?: string; primary_color: string; instagram_url?: string };
+  restaurant: { name: string; slug: string; logo_url?: string; primary_color: string; instagram_url?: string; show_glass_section?: boolean };
   wine_categories: Label[];
   wines: PublicWine[];
   menu: PublicMenuCategory[];
@@ -37,6 +37,7 @@ const copy = {
     close: "Chiudi", remove: "Rimuovi", findOption: "Cerca opzione", showWines: "Mostra vini",
     menu: "Menù", navigation: "Profilo del ristorante", backToDish: "Torna al piatto",
     drink: "Drink",
+    byGlass: "Vini al calice",
     appellation: "Denominazione", characteristics: "Caratteristiche",
   },
   en: {
@@ -48,6 +49,7 @@ const copy = {
     close: "Close", remove: "Remove", findOption: "Find option", showWines: "Show wines",
     menu: "Menu", navigation: "Restaurant sections", backToDish: "Back to the dish",
     drink: "Drink",
+    byGlass: "Wines by the glass",
     appellation: "Appellation", characteristics: "Wine characteristics",
   },
 };
@@ -126,7 +128,7 @@ function accentColors(hex: string) {
   } as CSSProperties;
 }
 
-function WineRow({ wine, lang, money, onBack }: { wine: PublicWine; lang: Language; money: Intl.NumberFormat; onBack?: () => void }) {
+function WineRow({ wine, lang, money, onBack, glassOnly }: { wine: PublicWine; lang: Language; money: Intl.NumberFormat; onBack?: () => void; glassOnly?: boolean }) {
   const t = copy[lang];
   const nose = translated(wine.nose_it, wine.nose_en, lang);
   const palate = translated(wine.palate_it, wine.palate_en, lang);
@@ -152,20 +154,21 @@ function WineRow({ wine, lang, money, onBack }: { wine: PublicWine; lang: Langua
     { title: t.nose, value: nose, Icon: Leaf },
     { title: t.palate, value: palate, Icon: Droplets },
   ].filter(note => note.value);
-  return <article className="wine-row" id={`wine-${wine.id}`} tabIndex={-1}>
+  const Title = glassOnly ? "h5" : "h4";
+  return <article className={glassOnly ? "wine-row wine-row-glass" : "wine-row"} id={`wine-${wine.id}`} tabIndex={-1}>
     <div className="wine-overview">
       {image && <ExternalImage key={image} url={image} alt={wine.name} className="wine-image" />}
       <div className="wine-info">
         <p className="wine-winery">{wine.winery.name}</p>
-        <h4 className="wine-name">{wine.name}</h4>
+        <Title className="wine-name">{wine.name}</Title>
         {classification && <p className="wine-appellation">{classification}</p>}
         {facts.length > 0 && <p className="wine-facts">{facts.join(" · ")}</p>}
         {characteristics.length > 0 && <ul className="wine-characteristics" aria-label={t.characteristics}>
           {characteristics.map(item => <li key={item.id}>{item.name}</li>)}
         </ul>}
         <dl className="wine-prices">
-          <div><dt>{t.bottle}</dt><dd>{money.format(wine.bottle_price)}</dd></div>
-          {wine.glass_price != null && <div><dt>{t.glassPrice}</dt><dd>{money.format(wine.glass_price)}</dd></div>}
+          {!glassOnly && <div><dt>{t.bottle}</dt><dd>{money.format(wine.bottle_price)}</dd></div>}
+          {wine.glass_price != null && wine.glass_price > 0 && <div><dt>{t.glassPrice}</dt><dd>{money.format(wine.glass_price)}</dd></div>}
         </dl>
       </div>
     </div>
@@ -189,7 +192,7 @@ function matchesFilters(wine: PublicWine, filters: WineFilters, ignore?: SelectF
     && (!filters.price || ignore === "price" || priceBand(wine.bottle_price) === filters.price)
     && (!filters.appellation || ignore === "appellation" || wine.appellation?.id === filters.appellation)
     && filters.characteristics.every(id => wine.characteristics?.some(item => item.id === id))
-    && (!filters.glass || wine.glass_price != null);
+    && (!filters.glass || (wine.glass_price ?? 0) > 0);
 }
 
 export function PublicWineList({ menu }: { menu: PublicMenu }) {
@@ -217,6 +220,9 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
   const t = copy[lang];
   const money = new Intl.NumberFormat(lang === "it" ? "it-IT" : "en-IE", { style: "currency", currency: "EUR" });
   const query = searchable(search);
+  const glassWines = menu.wines.filter(wine => (wine.glass_price ?? 0) > 0);
+  const hasGlass = menu.restaurant.show_glass_section !== false && glassWines.length > 0;
+  const glassTab = hasGlass && category === "glass";
   const searched = menu.wines.filter(w => {
     const text = [w.name, w.winery.name, label(w.country, lang), label(w.region, lang), w.vintage,
       w.appellation?.name, w.appellation_detail, ...(w.characteristics ?? []).map(item => label(item, lang)),
@@ -230,11 +236,12 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
   // Una combinazione senza risultati resta nella sua categoria e può essere rimossa.
   const tabs = menu.wine_categories.filter(c => categoryIds.has(c.id) || (scoped && c.id === category));
   const active = tabs.find(c => c.id === category)?.id ?? tabs[0]?.id;
-  const matching = (current: WineFilters) => searched.filter(w =>
-    (!(current.appellation || current.characteristics.length) || w.category_id === active) && matchesFilters(w, current));
+  const searchScope = glassTab ? searched.filter(w => (w.glass_price ?? 0) > 0) : searched;
+  const matching = (current: WineFilters) => searchScope.filter(w =>
+    (glassTab || !(current.appellation || current.characteristics.length) || w.category_id === active) && matchesFilters(w, current));
 
   function getOptions(current: WineFilters): FilterOptions {
-    const relevant = (key: SelectFilter) => searched.filter(w => matchesFilters(w, unscoped(current), key));
+    const relevant = (key: SelectFilter) => searchScope.filter(w => matchesFilters(w, unscoped(current), key));
     const names = (key: SelectFilter, getItems: (wine: PublicWine) => Named[]) => {
       const items = relevant(key).flatMap(getItems);
       if (current[key]) {
@@ -250,7 +257,7 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
       ["50up", `${t.from} ${money.format(50)}`],
     ];
     const bands = new Set<string>(relevant("price").map(w => priceBand(w.bottle_price)));
-    const categoryWines = menu.wines.filter(w => w.category_id === active);
+    const categoryWines = glassTab ? glassWines : menu.wines.filter(w => w.category_id === active);
     return {
       country: names("country", w => [localized(w.country)]),
       region: names("region", w => [localized(w.region)]),
@@ -263,18 +270,31 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
     };
   }
   const visible = matching(filters);
-  const visibleGroups = groups(visible.filter(w => w.category_id === active));
+  function renderGroups(wines: PublicWine[], glassOnly = false) {
+    const Country = glassOnly ? "h3" : "h2";
+    const Region = glassOnly ? "h4" : "h3";
+    return groups(wines).map(({ country, regions }) => <section className="country-group" key={country.id}>
+      <Country className="country-title"><span aria-hidden="true">{flag(country.code)}</span>{label(country, lang)}</Country>
+      {regions.map(({ region, wines }) => <section className="region-group" key={region.id}>
+        <Region className="region-title">{label(region, lang)}</Region>
+        {wines.map(wine => <WineRow key={wine.id} wine={wine} lang={lang} money={money} glassOnly={glassOnly}
+          onBack={pairing?.wineId === wine.id ? () => {
+            setView("menu"); setDestination({ id: `dish-${pairing.dishId}` }); setPairing(undefined);
+          } : undefined} />)}
+      </section>)}
+    </section>);
+  }
   const accent = /^#[0-9a-f]{6}$/i.test(menu.restaurant.primary_color) ? menu.restaurant.primary_color : "#711f3a";
   const logo = safeImage(menu.restaurant.logo_url);
   const brandIcon = <Wine size={29} aria-hidden="true" />;
   function selectCategory(id: string) {
-    if (active === id) return;
+    if ((glassTab ? "glass" : active) === id) return;
     const bar = tabsRef.current;
     const list = listRef.current;
     if (bar && list && bar.getBoundingClientRect().top <= 1) {
       window.scrollTo(0, window.scrollY + list.getBoundingClientRect().top - bar.offsetHeight);
     }
-    setFilters(current => unscoped(current));
+    setFilters(current => id === "glass" ? { ...unscoped(current), price: "", glass: false } : unscoped(current));
     setCategory(id);
   }
 
@@ -302,7 +322,7 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
         onWine={(wine, dishId) => {
           if (!searched.some(result => result.id === wine.id)) setSearch("");
           setFilters(current => {
-            const compatible = { ...emptyFilters, glass: current.glass && wine.glass_price != null };
+            const compatible = { ...emptyFilters, glass: current.glass && (wine.glass_price ?? 0) > 0 };
             for (const key of selectFilters) {
               if (matchesFilters(wine, { ...emptyFilters, [key]: current[key] })) compatible[key] = current[key];
             }
@@ -318,32 +338,32 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
           <label className="search-public"><Search size={18} aria-hidden="true" />
             <input type="search" value={search} placeholder={t.search} aria-label={t.search} onChange={e => setSearch(e.target.value)} />
           </label>
-          <WineFilterPanel active={filters} count={draft => matching(draft).length}
+          <WineFilterPanel active={filters} glassOnly={glassTab} count={draft => matching(draft).length}
             options={getOptions} onApply={draft => {
-              if ((draft.appellation || draft.characteristics.length) && active) setCategory(active);
+              if (!glassTab && (draft.appellation || draft.characteristics.length) && active) setCategory(active);
               setFilters(draft);
             }} copy={t} />
         </div>
-        {tabs.length > 0 && <nav ref={tabsRef} className="tabs public-tabs" aria-label={t.categories}>
+        {(tabs.length > 0 || hasGlass) && <nav ref={tabsRef} className="tabs public-tabs" aria-label={t.categories}>
           {tabs.map(c => {
             const Icon = categoryIcon(c);
-            return <button type="button" key={c.id} aria-pressed={c.id === active} onClick={() => selectCategory(c.id)}>
+            return <button type="button" key={c.id} aria-pressed={!glassTab && c.id === active} onClick={() => selectCategory(c.id)}>
               <Icon size={14} aria-hidden="true" />{label(c, lang)}
             </button>;
           })}
+          {hasGlass && <button type="button" aria-pressed={glassTab} onClick={() => selectCategory("glass")}>
+            <Wine size={14} aria-hidden="true" />{t.byGlass}
+          </button>}
         </nav>}
       </>}
       {!visible.length && <p className="public-empty" role="status">{menu.wines.length ? t.none : t.empty}</p>}
-      <div ref={listRef} className="public-results">{visibleGroups.map(({ country, regions }) => <section className="country-group" key={country.id}>
-        <h2><span aria-hidden="true">{flag(country.code)}</span>{label(country, lang)}</h2>
-        {regions.map(({ region, wines }) => <section className="region-group" key={region.id}>
-          <h3>{label(region, lang)}</h3>
-          {wines.map(wine => <WineRow key={wine.id} wine={wine} lang={lang} money={money}
-              onBack={pairing?.wineId === wine.id ? () => {
-                setView("menu"); setDestination({ id: `dish-${pairing.dishId}` }); setPairing(undefined);
-              } : undefined} />)}
-        </section>)}
-      </section>)}</div>
+      <div ref={listRef} className="public-results">{glassTab ? menu.wine_categories.map(category => {
+        const wines = visible.filter(wine => wine.category_id === category.id);
+        return wines.length > 0 && <section className="glass-group" key={category.id}>
+          <h2>{label(category, lang)}</h2>
+          {renderGroups(wines, true)}
+        </section>;
+      }) : renderGroups(visible.filter(wine => wine.category_id === active))}</div>
       </div>
       <PublicFooter lang={lang} instagramUrl={menu.restaurant.instagram_url} />
     </div>

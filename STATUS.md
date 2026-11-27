@@ -1,5 +1,13 @@
 # Stato del progetto
 
+## Fasi 4.10 e 4.11 · SuPeR Vini al calice
+
+- Collaudo grafico e funzionale locale approvato. Pubblicazione su `main` autorizzata. Tab automatico in fondo alla Carta vini, gruppi originali, prezzo calice, ricerca e filtri dedicati. Impostazioni per nascondere il tab e sospendere la mescita mantenendone il prezzo.
+- Migrazione applicata manualmente al Supabase ufficiale con 5/5 controlli post-installazione confermati. In PostgreSQL isolato verificati anche la compatibilità del payload, le transizioni di disponibilità e il salvataggio multiristorante con flag esplicito e omesso.
+- Verificati in Chrome a 320 e 1280 px gruppi, Champagne, varianti, IT/EN, filtri senza risultati, prezzi nulli, zero e positivi, modifiche, sospensioni e riattivazioni. Verificati Menù e abbinamenti, Drink List, QR Studio, footer, Instagram e blocco di eliminazione dei vini assegnati. Lint, typecheck e build superati.
+- Provati in Chrome i tre percorsi di assegnazione con i controlli della mescita: durante la creazione del vino, dal catalogo esistente e dalla scheda del ristorante.
+- In sola lettura, la RPC ufficiale non ha restituito categorie manuali equivalenti a Calici nelle tre carte pubbliche. Il controllo riguarda le categorie visibili. Smart Service non è iniziato. Analytics e Wine Intelligence restano in standby.
+
 ## Fase 4.9 · Integrità del catalogo vini
 
 - Collaudo locale approvato e pubblicazione su `main` autorizzata. Eliminazione definitiva con conferma esplicita e riepilogo di ristoranti e piatti in caso di blocco. Controllo dei possibili duplicati in creazione e modifica con apertura della scheda esistente e conferma volontaria.

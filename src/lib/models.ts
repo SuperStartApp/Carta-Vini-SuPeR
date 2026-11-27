@@ -22,12 +22,12 @@ export type WineGrape = { grape_id: string; percentage: number | null };
 export type Restaurant = {
   id: string; name: string; slug: string; logo_url: string | null;
   instagram_url?: string | null;
-  primary_color: string; is_published: boolean; cocktail_enabled: boolean;
+  primary_color: string; is_published: boolean; cocktail_enabled: boolean; show_glass_section?: boolean;
 };
 export const statuses = { available: "Disponibile", unavailable: "Non disponibile", suspended: "Sospeso" } as const;
 export type Status = keyof typeof statuses;
 export type Assignment = {
-  wine_id: string; bottle_price: number; glass_price: number | null; status: Status;
+  wine_id: string; bottle_price: number; glass_price: number | null; status: Status; glass_enabled?: boolean;
 };
 export type RestaurantAssignment = Assignment & { restaurant_id: string };
 

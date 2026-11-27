@@ -44,7 +44,7 @@ export async function getAssignmentRestaurants(): Promise<Pick<Restaurant, "id" 
 export async function getCatalogAssignments(): Promise<RestaurantAssignment[]> {
   const { db } = await requireAdmin();
   return getAdminRows<RestaurantAssignment>((a, b) => db.from("swm_restaurant_wines")
-    .select("restaurant_id,wine_id,bottle_price,glass_price,status").order("wine_id").order("restaurant_id").range(a, b));
+    .select("restaurant_id,wine_id,bottle_price,glass_price,status,glass_enabled").order("wine_id").order("restaurant_id").range(a, b));
 }
 
 export async function getAppellations(): Promise<Appellation[]> {

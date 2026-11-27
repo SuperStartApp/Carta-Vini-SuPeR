@@ -260,7 +260,8 @@ export function AssignmentBoard({ restaurantId, wines, assignments, refs, catego
               <span className="note">{wine && wineries.get(wine.winery_id)}</span>
             </div>
             <div className="flex flex-wrap items-end gap-2">
-              <Prices compact key={`${row.bottle_price}:${row.glass_price}:${row.status}`} bottle={row.bottle_price} glass={row.glass_price} status={row.status} />
+              <Prices compact key={`${row.bottle_price}:${row.glass_price}:${row.status}:${row.glass_enabled}`}
+                bottle={row.bottle_price} glass={row.glass_price} status={row.status} glassEnabled={row.glass_enabled} />
               <div className="flex flex-wrap gap-2">
               <button className="secondary compact" name="operation" value="save">Salva</button>
               <button className="secondary compact text-bordeaux" formNoValidate name="operation" value="remove"><Trash2 size={14} /> Rimuovi</button>

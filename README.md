@@ -37,6 +37,12 @@ Entrambi i file contengono lo stesso URL HTTPS canonico usato dal gestionale, co
 
 Il collaudo manuale è approvato, incluse la scansione da smartphone, l'apertura della carta sul dominio ufficiale da rete mobile e il download. Gli artefatti e i ristoranti dimostrativi appartengono al solo ambiente isolato di collaudo.
 
+## Vini al calice
+
+Il tab **Vini al calice** compare in fondo alla Carta vini quando almeno una referenza disponibile ha mescita attiva e prezzo calice positivo. Il tab mostra solo il prezzo calice e mantiene singolarmente annate e formati. Da **Ristoranti → Impostazioni** si può disattivare il tab con **Mostra sezione Vini al calice**. I prezzi calice delle categorie ordinarie restano visibili per le referenze idonee.
+
+Nella Carta vini del gestionale, **Disponibilità al calice** sospende la mescita mantenendo il prezzo. La disponibilità generale della referenza prevale. La [migrazione additiva](supabase/migrations/20261127000000_swm_wines_by_the_glass.sql) è stata applicata manualmente al Supabase ufficiale. L'amministratore ha confermato 5/5 [controlli post-installazione](supabase/verify/20261127000000_swm_wines_by_the_glass.sql) e approvato il collaudo grafico e funzionale.
+
 ## Integrità del catalogo vini
 
 Nel catalogo, aprire la scheda del vino e usare **Elimina vino** in fondo alla pagina. Confermare l'eliminazione definitiva. Se una carta o un abbinamento usa il vino, il gestionale blocca l'operazione e indica i ristoranti e i piatti coinvolti.

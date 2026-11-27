@@ -201,7 +201,7 @@ async function Restaurants({ id, query }: { id?: string; query: Query }) {
   </section></RestaurantCard>;
   const [wines, refs, assignments, orderRows] = await Promise.all([
     getWines(), getReferences(), getAdminRows<Assignment>((a, b) => db.from("swm_restaurant_wines")
-      .select("wine_id,bottle_price,glass_price,status").eq("restaurant_id", id).order("wine_id").range(a, b)),
+      .select("wine_id,bottle_price,glass_price,status,glass_enabled").eq("restaurant_id", id).order("wine_id").range(a, b)),
     getAdminRows<{ category_id: string; position: number }>((a, b) => db.from("swm_restaurant_wine_categories")
       .select("category_id,position").eq("restaurant_id", id).order("category_id").range(a, b)),
   ]);

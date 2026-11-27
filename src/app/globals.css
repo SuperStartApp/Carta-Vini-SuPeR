@@ -58,7 +58,7 @@ body {
   .tabs :is([aria-current="page"], [aria-pressed="true"]) { @apply border-bordeaux bg-bordeaux text-white; }
   .assignment-fields { @apply grid min-w-0 flex-1 basis-72 grid-cols-2 gap-2 sm:grid-cols-3; }
   .assignment-fields label { @apply min-w-0 gap-1; }
-  .assignment-fields label:last-child { @apply col-span-2 sm:col-span-1; }
+  .assignment-fields > label:nth-child(3) { @apply col-span-2 sm:col-span-1; }
   .assignment-fields :is(input, select) { @apply !min-h-9 !px-1.5 !py-1 sm:!px-2.5; }
 
   .public-page {
@@ -134,10 +134,17 @@ body {
   .public-empty { @apply py-10 text-center text-neutral-600; }
   .public-results { @apply flow-root; }
   .country-group { @apply mt-4 sm:mt-6; }
-  .country-group h2 { @apply flex items-center gap-2 border-b pb-1 font-serif text-3xl sm:text-4xl; border-color: var(--boutique-line); }
-  .country-group h2 span { @apply text-lg; }
+  .country-title { @apply flex items-center gap-2 border-b pb-1 font-serif text-3xl sm:text-4xl; border-color: var(--boutique-line); }
+  .country-title span { @apply text-lg; }
   .region-group { @apply mt-3 sm:mt-4; }
-  .region-group h3 { @apply mb-2 font-serif text-xl sm:text-2xl; color: var(--boutique-muted); }
+  .region-title { @apply mb-2 font-serif text-xl sm:text-2xl; color: var(--boutique-muted); }
+  .glass-group { @apply mt-5; }
+  .glass-group > h2 { @apply font-serif text-3xl; }
+  .glass-group .country-group { @apply mt-2; }
+  .glass-group .country-title { @apply text-lg; }
+  .glass-group .region-title { @apply text-lg; }
+  .wine-row-glass { @apply py-2 sm:py-3; }
+  .wine-row-glass .wine-image { @apply h-[clamp(7rem,34vw,10rem)]; }
   .wine-row {
     @apply mb-3 rounded-xl border bg-white px-3 py-3 sm:px-5 sm:py-4;
     border-color: var(--boutique-line);

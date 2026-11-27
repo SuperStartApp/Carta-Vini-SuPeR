@@ -212,6 +212,7 @@ export async function saveRestaurant(form: FormData) {
       name: required(form, "name", "Nome ristorante"), slug, logo_url: image(form, "logo_url"),
       primary_color: color, is_published: form.get("is_published") === "on",
       cocktail_enabled: form.get("cocktail_enabled") === "on",
+      ...(form.has("has_show_glass_section") ? { show_glass_section: form.get("show_glass_section") === "on" } : {}),
       ...(form.has("instagram_url") ? { instagram_url: profile } : {}),
     };
     const table = db.from("swm_restaurants");
@@ -243,8 +244,13 @@ function assignment(form: FormData, suffix = "", bottleLabel = "Inserisci il pre
   if (bottle === null) throw new Error(bottleLabel);
   const status = value(form, `status${suffix}`);
   if (!Object.hasOwn(statuses, status)) throw new Error("Seleziona uno stato valido.");
+  const glass = amount(form, `glass_price${suffix}`, "Prezzo calice");
+  const initialGlass = form.get(`initial_glass_enabled${suffix}`);
+  const enabled = form.get(`glass_enabled${suffix}`) === "on";
   return {
-    bottle_price: bottle, glass_price: amount(form, `glass_price${suffix}`, "Prezzo calice"),
+    bottle_price: bottle, glass_price: glass,
+    ...((glass ?? 0) > 0 && (initialGlass === "true" || initialGlass === "false") && enabled !== (initialGlass === "true")
+      ? { glass_enabled: enabled } : {}),
     status: status as Status,
   };
 }
@@ -252,8 +258,12 @@ function assignment(form: FormData, suffix = "", bottleLabel = "Inserisci il pre
 function restaurantAssignments(form: FormData) {
   return values(form, "restaurant_id").sort().map(restaurant_id => ({
     restaurant_id,
-    ...assignment(form, `_${restaurant_id}`, "Inserisci il prezzo bottiglia per ogni ristorante selezionato."),
+    ...assignmentForInsert(form, `_${restaurant_id}`, "Inserisci il prezzo bottiglia per ogni ristorante selezionato."),
   }));
+}
+
+function assignmentForInsert(form: FormData, suffix: string, bottleLabel?: string) {
+  return { glass_enabled: true, ...assignment(form, suffix, bottleLabel) };
 }
 
 export async function assignWineToRestaurants(wineId: string, form: FormData) {
@@ -276,7 +286,7 @@ export async function addAssignments(restaurantId: string, form: FormData) {
   try {
     const ids = values(form, "wine_id");
     if (!ids.length) throw new Error("Seleziona almeno un vino.");
-    const rows = ids.map(wine_id => ({ restaurant_id: restaurantId, wine_id, ...assignment(form, `_${wine_id}`) }));
+    const rows = ids.map(wine_id => ({ restaurant_id: restaurantId, wine_id, ...assignmentForInsert(form, `_${wine_id}`) }));
     check((await db.from("swm_restaurant_wines").insert(rows)).error);
     revalidatePath(`/admin/ristoranti/${restaurantId}`);
     return { success: ids.length === 1 ? "Vino aggiunto alla carta." : `${ids.length} vini aggiunti alla carta.` };

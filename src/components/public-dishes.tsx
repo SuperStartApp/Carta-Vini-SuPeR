@@ -128,7 +128,7 @@ export function PublicDishes({ categories, wines = [], lang, money, onWine, kind
                   {image && <ExternalImage url={image} alt="" className="h-14 w-10 shrink-0 object-contain" />}
                   <span className="min-w-0 wrap-break-word"><strong>{wine.name}</strong><span className="block text-neutral-700">{wine.winery.name}</span>
                     <span className="block">{t.bottle} {money.format(wine.bottle_price)}
-                      {wine.glass_price != null && ` · ${t.glass} ${money.format(wine.glass_price)}`}</span>
+                      {wine.glass_price != null && wine.glass_price > 0 && ` · ${t.glass} ${money.format(wine.glass_price)}`}</span>
                   </span>
                 </button>
               </li>; })}</ul>

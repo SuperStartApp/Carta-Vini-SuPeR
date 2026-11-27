@@ -11,11 +11,12 @@ export type SelectFilter = Exclude<keyof WineFilters, "glass" | "characteristics
 export const selectFilters: SelectFilter[] = ["country", "region", "winery", "grape", "aging", "price", "appellation"];
 export type FilterOptions = Record<SelectFilter | "characteristics", [string, string][]>;
 
-export function WineFilterPanel({ active, count, options, onApply, copy }: {
+export function WineFilterPanel({ active, count, options, onApply, copy, glassOnly }: {
   active: WineFilters;
   count: (filters: WineFilters) => number;
   options: (filters: WineFilters) => FilterOptions;
   onApply: (filters: WineFilters) => void;
+  glassOnly?: boolean;
   copy: Record<SelectFilter | "characteristics", string> & { filter: string; all: string; glass: string; reset: string; close: string; remove: string; findOption: string; showWines: string };
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -62,7 +63,7 @@ export function WineFilterPanel({ active, count, options, onApply, copy }: {
           <button type="button" onClick={close} aria-label={copy.close}><X size={21} aria-hidden="true" /></button>
         </header>
         <div className="filter-sheet-fields">
-          {selectFilters.map(key => {
+          {selectFilters.filter(key => !glassOnly || key !== "price").map(key => {
             const items = draftOptions[key];
             if (key === "appellation" && !items.length) return null;
             const search = searchable(queries[key] ?? "");
@@ -89,10 +90,10 @@ export function WineFilterPanel({ active, count, options, onApply, copy }: {
                 {name}
               </label>)}</div>
           </fieldset>}
-          <label className="check-field col-span-full">
+          {!glassOnly && <label className="check-field col-span-full">
             <input type="checkbox" checked={draft.glass} onChange={event => setDraft({ ...draft, glass: event.target.checked })} />
             {copy.glass}
-          </label>
+          </label>}
         </div>
         <footer className="filter-sheet-footer">
           <button type="button" className="boutique-filter-button" onClick={() => { setDraft(emptyFilters); setQueries({}); }}>{copy.reset}</button>
