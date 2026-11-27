@@ -1,14 +1,16 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabaseConfig } from "./lib/supabase-config";
+import { serviceCookie } from "./lib/service";
 
 export async function proxy(request: NextRequest) {
   const connection = supabaseConfig();
   let response = NextResponse.next({ request });
   if (!connection) return response;
+  const service = request.nextUrl.pathname === "/servizio" || request.nextUrl.pathname.startsWith("/servizio/");
 
   const db = createServerClient(connection.url, connection.key, {
-    cookieOptions: { httpOnly: true, secure: request.nextUrl.protocol === "https:" },
+    cookieOptions: { ...(service ? serviceCookie : {}), httpOnly: true, secure: request.nextUrl.protocol === "https:" },
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll: (items, headers) => {
@@ -23,4 +25,4 @@ export async function proxy(request: NextRequest) {
   return response;
 }
 
-export const config = { matcher: ["/admin/:path*", "/login"] };
+export const config = { matcher: ["/admin/:path*", "/login", "/servizio/:path*"] };

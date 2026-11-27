@@ -1,5 +1,12 @@
 # Stato del progetto
 
+## Fase 5.0 · Smart Service
+
+- Collaudo grafico e funzionale locale approvato. Login dedicato con sessione separata, selezione dei soli ristoranti autorizzati, permessi informativi e gestione amministrativa di impostazioni e associazioni. Provisioning assistito per UUID Auth verificato.
+- Su PostgreSQL isolato, 7/7 controlli strutturali. Verificati accessi diretti con RLS, separazione tra locali, rifiuto delle scritture sui prodotti e revoca, disattivazione e cambio permessi con JWT invariato. Risposta pubblica invariata sulla fixture.
+- In Chrome verificati i cinque profili, accessi incrociati, login e logout indipendenti da SuPeR, associazione inizialmente disabilitata, revoca e ripristino con sessione aperta. Verificate anche Carta vini, Calici, Menù, Drink List, footer, Instagram e QR Studio nell'ambiente simulato.
+- Migrazione installata manualmente sul Supabase ufficiale con 7/7 controlli post-installazione confermati. Smart Service 5.1–5.3, Analytics e Wine Intelligence restano in standby.
+
 ## Fasi 4.10 e 4.11 · SuPeR Vini al calice
 
 - Completate in produzione con il rilascio `492f36f`. Le tre carte canoniche hanno risposto HTTP 200. Vini al calice è l'ultimo tab su Wine Art (2 referenze) ed Enosteria del Gallo (3). Il Virgilio non ha referenze idonee e il tab è assente. Verificati Carta vini, Menù, Drink List dove disponibile, abbinamenti, footer e Instagram.

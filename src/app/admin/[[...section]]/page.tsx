@@ -6,6 +6,7 @@ import { AssignmentBoard, CatalogList, PublicLink } from "../../../components/ad
 import { WineEditor } from "../../../components/wine-editor";
 import { RestaurantQrStudio } from "../../../components/restaurant-qr-studio";
 import { RestaurantMenu } from "../restaurant-menu";
+import { RestaurantService } from "../restaurant-service";
 import { publicRestaurantUrl } from "../../../lib/public-restaurant-url";
 import { restaurantQrMatrix, restaurantQrUrl } from "../../../lib/restaurant-qr";
 import type { PublicMenu } from "../../../components/public-wine-list";
@@ -151,7 +152,7 @@ async function ReferencePage({ query }: { query: Query }) {
 
 function RestaurantCard({ row, tab, children }: { row: Restaurant; tab: string; children: React.ReactNode }) {
   const tabs = [["carta", "Carta vini"], ["menu", "Menù"], ["cocktail", "Drink List"], ["link", "Link pubblico"],
-    ["qr", "SuPeR QR Studio"], ["impostazioni", "Impostazioni"]];
+    ["qr", "SuPeR QR Studio"], ["service", "Smart Service"], ["impostazioni", "Impostazioni"]];
   return <>
     <Heading title={row.name} subtitle={row.is_published ? "Pubblicato" : "Bozza"}>
       <Link className="secondary" href="/admin/ristoranti">Ristoranti</Link>
@@ -191,11 +192,12 @@ async function Restaurants({ id, query }: { id?: string; query: Query }) {
   const [row] = records<Restaurant>(await db.from("swm_restaurants").select("*").eq("id", id));
   if (!row) notFound();
   const tab = query.tab === "menu" || query.tab === "cocktail" || query.tab === "link"
-    || query.tab === "qr" || query.tab === "impostazioni" ? query.tab : "carta";
+    || query.tab === "qr" || query.tab === "service" || query.tab === "impostazioni" ? query.tab : "carta";
   if (tab === "menu") return <RestaurantCard row={row} tab={tab}><RestaurantMenu id={id} /></RestaurantCard>;
   if (tab === "cocktail") return <RestaurantCard row={row} tab={tab}><RestaurantMenu id={id} kind="cocktail" /></RestaurantCard>;
   if (tab === "link") return <RestaurantCard row={row} tab={tab}><PublicLink url={publicRestaurantUrl(row.slug)} published={row.is_published} /></RestaurantCard>;
   if (tab === "qr") return <RestaurantCard row={row} tab={tab}><RestaurantQr row={row} /></RestaurantCard>;
+  if (tab === "service") return <RestaurantCard row={row} tab={tab}><RestaurantService id={id} /></RestaurantCard>;
   if (tab === "impostazioni") return <RestaurantCard row={row} tab={tab}><section className="panel">
     <RestaurantForm key={`${row.id}:${row.slug}:${row.is_published}`} restaurant={row} />
   </section></RestaurantCard>;

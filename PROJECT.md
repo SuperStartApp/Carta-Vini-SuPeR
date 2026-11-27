@@ -87,6 +87,14 @@ Alla creazione del ristorante, un trigger copia nove categorie bilingui modifica
 
 ## Accesso ai dati
 
+La migrazione `20261127000001_swm_smart_service_access.sql` è stata applicata manualmente al Supabase ufficiale con 7/7 controlli post-installazione confermati. La migrazione crea le strutture senza inserire configurazioni o associazioni.
+
+La fase 5.0 aggiunge Smart Service su `/servizio` con un cookie di sessione dedicato e confinato alla rotta. Il gestionale SuPeR mantiene la propria sessione e il claim `swm_admin`. `swm_service_memberships` collega l'UUID Auth al ristorante con stato, etichetta facoltativa e timestamp. `swm_service_settings` conserva l'abilitazione del locale e i cinque permessi. Tutti i flag partono disattivati e la migrazione non abilita locali esistenti.
+
+Le tabelle sono gestite da SuPeR con RLS e grant espliciti. La proiezione `swm_service_restaurants()` verifica l'identità dal database, l'associazione e l'abilitazione generale. `swm_service_has_access(uuid, text)` permette alle future RPC circoscritte di verificare anche il singolo permesso nella stessa transazione dell'operazione. Una modifica entra in vigore alla successiva operazione dopo il commit, anche con il token già aperto. Le informazioni già caricate sul dispositivo possono rimanere visibili fino alla successiva lettura.
+
+Per le fasi successive, `available` indica disponibilità, `suspended` sospensione operativa e `unavailable` uno stato riservato a SuPeR. Prima della 5.1 va definita la protezione delle sospensioni amministrative già esistenti. Mescita e storico operativo saranno gestiti rispettivamente tramite `glass_enabled` e una struttura da approvare con la 5.1.
+
 Le fasi 4.10 e 4.11 derivano la sezione Vini al calice da `swm_public_menu`, riusando l'ordine delle categorie e dei territori. Ogni referenza continua ad appartenere alla categoria originale. La sezione si aggiunge in fondo e usa il prezzo calice della singola assegnazione. `show_glass_section` controlla la sola sezione dedicata. `glass_enabled` controlla la pubblicazione del prezzo calice, che richiede anche un importo strettamente positivo e una referenza disponibile. I prezzi e lo stato della mescita rimangono memorizzati durante la sospensione generale. La migrazione `20261127000000_swm_wines_by_the_glass.sql` risulta applicata manualmente al Supabase ufficiale con 5/5 controlli confermati.
 
 La migrazione additiva aggiorna la proiezione pubblica e la RPC di creazione con assegnazioni. I chiamanti precedenti che omettono il nuovo flag mantengono il default attivo. I ruoli e le policy esistenti restano in vigore. Smart Service richiede un'autorizzazione separata. Analytics e Wine Intelligence sono in standby.

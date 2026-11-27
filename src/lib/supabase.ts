@@ -4,13 +4,14 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { supabaseConfig } from "./supabase-config";
+import { serviceCookie } from "./service";
 
-export async function sessionClient() {
+export async function sessionClient(scope?: "service") {
   const config = supabaseConfig();
   if (!config) return null;
   const [jar, requestHeaders] = await Promise.all([cookies(), headers()]);
   return createServerClient(config.url, config.key, {
-    cookieOptions: { httpOnly: true, secure: requestHeaders.get("x-forwarded-proto") === "https" },
+    cookieOptions: { ...(scope === "service" ? serviceCookie : {}), httpOnly: true, secure: requestHeaders.get("x-forwarded-proto") === "https" },
     cookies: {
       getAll: () => jar.getAll(),
       setAll: (items) => {

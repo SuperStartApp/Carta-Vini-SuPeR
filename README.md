@@ -37,6 +37,19 @@ Entrambi i file contengono lo stesso URL HTTPS canonico usato dal gestionale, co
 
 Il collaudo manuale è approvato, incluse la scansione da smartphone, l'apertura della carta sul dominio ufficiale da rete mobile e il download. Gli artefatti e i ristoranti dimostrativi appartengono al solo ambiente isolato di collaudo.
 
+## SuPeR Smart Service
+
+La fase 5.0 introduce l'area ristoratore su `/servizio` con login dedicato e una sezione **Smart Service** nella scheda amministrativa del locale. L'area mostra l'identità del ristorante e le funzionalità abilitate. Le operazioni sui prodotti appartengono alle fasi successive.
+
+La [migrazione](supabase/migrations/20261127000001_swm_smart_service_access.sql) è stata applicata manualmente al Supabase ufficiale. L'amministratore ha confermato 7/7 [controlli post-installazione](supabase/verify/20261127000001_swm_smart_service_access.sql). Il provisioning resta assistito.
+
+1. SuPeR verifica l'identità della persona e la sua autorizzazione per il locale. In Supabase **Authentication → Users** crea o invita un account individuale se serve. Per un account esistente, verifica con la persona l'account da usare e conserva password, metadati e ruoli. La sola corrispondenza email non autorizza l'accesso.
+2. Copia l'UUID Auth verificato e lo associa in **Ristoranti → Smart Service**. Può aggiungere un'etichetta interna. L'associazione nasce disabilitata.
+3. Configura i permessi, attiva l'area e abilita l'associazione. Comunica l'indirizzo `/servizio/login`. Per revocare l'accesso, usa **Revoca accesso** sulla singola associazione. Per sospendere l'intero locale, disattiva l'area.
+4. Per problemi di accesso, SuPeR verifica identità, stato dell'account e abilitazione. Usa la procedura Auth assistita già disponibile per il progetto. Per un account condiviso con un'altra applicazione, coordina il recupero prima di qualsiasi intervento sulle credenziali. Verifica che l'eventuale flusso email e i suoi redirect siano compatibili con la configurazione Auth esistente.
+
+Le prove in produzione su accesso a un locale, selezione di più locali, modifica dei permessi e revoca con sessione aperta richiedono un futuro account Auth operativo e associazioni espressamente autorizzate. L'anteprima e i download di QR Studio richiedono una sessione amministrativa.
+
 ## Vini al calice
 
 Il tab **Vini al calice** compare in fondo alla Carta vini quando almeno una referenza disponibile ha mescita attiva e prezzo calice positivo. Il tab mostra solo il prezzo calice e mantiene singolarmente annate e formati. Da **Ristoranti → Impostazioni** si può disattivare il tab con **Mostra sezione Vini al calice**. I prezzi calice delle categorie ordinarie restano visibili per le referenze idonee.
