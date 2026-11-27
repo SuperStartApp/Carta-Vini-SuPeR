@@ -2,6 +2,7 @@
 
 ## Fasi 4.10 e 4.11 · SuPeR Vini al calice
 
+- Completate in produzione con il rilascio `492f36f`. Le tre carte canoniche hanno risposto HTTP 200. Vini al calice è l'ultimo tab su Wine Art (2 referenze) ed Enosteria del Gallo (3). Il Virgilio non ha referenze idonee e il tab è assente. Verificati Carta vini, Menù, Drink List dove disponibile, abbinamenti, footer e Instagram.
 - Collaudo grafico e funzionale locale approvato. Pubblicazione su `main` autorizzata. Tab automatico in fondo alla Carta vini, gruppi originali, prezzo calice, ricerca e filtri dedicati. Impostazioni per nascondere il tab e sospendere la mescita mantenendone il prezzo.
 - Migrazione applicata manualmente al Supabase ufficiale con 5/5 controlli post-installazione confermati. In PostgreSQL isolato verificati anche la compatibilità del payload, le transizioni di disponibilità e il salvataggio multiristorante con flag esplicito e omesso.
 - Verificati in Chrome a 320 e 1280 px gruppi, Champagne, varianti, IT/EN, filtri senza risultati, prezzi nulli, zero e positivi, modifiche, sospensioni e riattivazioni. Verificati Menù e abbinamenti, Drink List, QR Studio, footer, Instagram e blocco di eliminazione dei vini assegnati. Lint, typecheck e build superati.
