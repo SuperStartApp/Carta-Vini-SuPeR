@@ -2,7 +2,9 @@
 
 ## Fase 5.5 · Smart Pairing
 
-- Collaudo manuale e pubblicazione approvati. L’amministratore ha installato `20261128000000_swm_smart_pairing.sql` sul Supabase ufficiale e confermato 6/6 controlli post-installazione. Print Studio, Inventory, Margins, Analytics e Wine Intelligence in standby.
+- Pubblicata con `6b83f13` e deploy Vercel riuscito. Collaudo manuale approvato. L’amministratore ha installato `20261128000000_swm_smart_pairing.sql` sul Supabase ufficiale e confermato 6/6 controlli post-installazione. Print Studio, Inventory, Margins, Analytics e Wine Intelligence in standby.
+- Le tre carte canoniche rispondono HTTP 200 senza redirect. La RPC pubblica restituisce cinque abbinamenti Bottiglia per Wine Art, due per il Gallo e nessuno per il Virgilio. In Chrome verificati a campione i prezzi Bottiglia e il ritorno al piatto. Verificati anche i tab Calici e Drink List dove presenti. Calice ed Entrambi restano collaudati in isolamento poiché assenti dai dati pubblici osservati.
+- Le RPC operative di lettura, salvataggio 5.5 e salvataggio legacy negano l’accesso anonimo con HTTP 401. Entrambi i login sono raggiungibili, le rotte riservate rimandano al login corretto e il POST di export anonimo restituisce HTTP 403. Restano eventuali controlli autenticati in sola lettura sui selettori e sulle colonne del workbook.
 - In PostgreSQL isolato, 6/6 controlli strutturali. Verificati default Bottiglia, modalità miste, sospensione e riattivazione, prezzi aggiornati, revoca, isolamento, storico e conflitti sulla sola modalità.
 - In Chrome con API isolate verificati i due pannelli, la carta IT/EN, il ritorno al piatto, i Calici nascosti, la sospensione e riattivazione della mescita e il workbook Export Studio. Verificate anche le regressioni su Drink List, QR Studio e la disponibilità del pannello Account Manager. Lint, typecheck, build e `git diff --check` superati.
 
