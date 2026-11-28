@@ -1,5 +1,7 @@
 "use server";
 
+import { isServingMode } from "../../lib/pairing-mode";
+
 import { revalidatePath } from "next/cache";
 import { listTables, type ListKind } from "../../lib/menu";
 import { statuses, type Status } from "../../lib/models";
@@ -65,6 +67,10 @@ export async function saveDish(restaurantId: string, dishId: string | null, form
     tables(kind);
     const allergenIds = [...new Set(form.getAll("allergen").map(Number))];
     const wineIds = kind === "menu" ? form.getAll("wine").map(String).filter(Boolean) : [];
+    const modes = form.getAll("serving_mode");
+    if (kind === "menu" && (modes.length !== wineIds.length || !modes.every(isServingMode))) {
+      throw new Error("Verifica le modalità di servizio degli abbinamenti.");
+    }
     if (allergenIds.some(id => !Number.isInteger(id) || id < 1 || id > 14)) throw new Error("Controlla gli allergeni selezionati.");
     if (wineIds.length > 2 || new Set(wineIds).size !== wineIds.length) throw new Error("Seleziona al massimo due vini distinti.");
     const category = field(form, "category_id");
@@ -77,6 +83,8 @@ export async function saveDish(restaurantId: string, dishId: string | null, form
       ...(dishId && form.has("expected_status") ? { expected_status: field(form, "expected_status") } : {}),
       ...(dishId && kind === "menu" && form.has("expected_pairings")
         ? { expected_pairings: JSON.parse(field(form, "expected_pairings")) } : {}),
+      ...(kind === "menu" ? { serving_modes: modes } : {}),
+      ...(dishId && kind === "menu" && form.has("expected_modes") ? { expected_modes: JSON.parse(field(form, "expected_modes")) } : {}),
     };
     const result = kind === "cocktail"
       ? await db.rpc("swm_save_cocktail", { cocktail_data: row, allergen_ids: allergenIds })
@@ -98,7 +106,7 @@ export async function changeDish(restaurantId: string, dishId: string, form: For
       const [dish, allergens, pairings] = await Promise.all([
         table.select("category_id,name_it,name_en,description_it,description_en,price").eq("restaurant_id", restaurantId).eq("id", dishId).single(),
         db.from(source.allergens).select("allergen_id").eq("restaurant_id", restaurantId).eq(source.itemKey, dishId),
-        kind === "menu" ? db.from("swm_dish_pairings").select("wine_id").eq("restaurant_id", restaurantId).eq("dish_id", dishId).order("slot") : null,
+        kind === "menu" ? db.from("swm_dish_pairings").select("wine_id,serving_mode").eq("restaurant_id", restaurantId).eq("dish_id", dishId).order("slot") : null,
       ]);
       check(dish.error); check(allergens.error); check(pairings?.error ?? null);
       if (!dish.data) throw new Error(drink ? "Bevanda non trovata." : "Piatto non trovato.");
@@ -106,7 +114,8 @@ export async function changeDish(restaurantId: string, dishId: string, form: For
       const allergen_ids = (allergens.data ?? []).map(row => row.allergen_id);
       const result = kind === "cocktail"
         ? await db.rpc("swm_save_cocktail", { cocktail_data: copy, allergen_ids })
-        : await db.rpc("swm_save_dish", { dish_data: copy, allergen_ids, wine_ids: (pairings?.data ?? []).map(row => row.wine_id) });
+        : await db.rpc("swm_save_dish", { dish_data: { ...copy, pairing_source: dishId,
+          serving_modes: (pairings?.data ?? []).map(row => row.serving_mode) }, allergen_ids, wine_ids: (pairings?.data ?? []).map(row => row.wine_id) });
       check(result.error);
       refresh(restaurantId);
       return { success: drink ? "Copia creata come bevanda sospesa." : "Copia creata come piatto sospeso." };

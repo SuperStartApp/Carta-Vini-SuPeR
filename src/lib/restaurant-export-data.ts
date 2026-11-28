@@ -3,6 +3,7 @@ import { getAdminRows } from "./data";
 import { requireAdmin } from "./supabase";
 import type { Assignment, Restaurant, Status } from "./models";
 import { listTables, type ListKind } from "./menu";
+import type { ServingMode } from "./pairing-mode";
 
 export const exportAreas = { wines: "Carta vini", glass: "Vini al calice", menu: "Menù", drinks: "Drink List", pairs: "Abbinamenti gastronomici" } as const;
 export type ExportArea = keyof typeof exportAreas;
@@ -20,7 +21,7 @@ export type ExportItem = { id: string; name_it: string; description_it: string |
   category: Named & { position: number }; allergens: { allergen: { id: number; name_it: string } }[] };
 export type ExportData = { restaurant: Pick<Restaurant,"name" | "slug">; wines: ExportWine[]; menu: ExportItem[];
   drinks: ExportItem[]; categoryOrder: { category_id: string; position: number }[];
-  pairs: { dish_id: string; wine_id: string; slot: number }[] };
+  pairs: { dish_id: string; wine_id: string; slot: number; serving_mode: ServingMode }[] };
 
 export async function loadRestaurantExport(id: string, options: ExportOptions): Promise<ExportData | null> {
   const { db } = await requireAdmin();
@@ -46,7 +47,7 @@ export async function loadRestaurantExport(id: string, options: ExportOptions): 
     has("drinks") ? items("cocktail") : [],
     has("wines") || has("glass") ? getAdminRows<ExportData["categoryOrder"][number]>((a,b) => db.from("swm_restaurant_wine_categories")
       .select("category_id,position").eq("restaurant_id",id).order("category_id").range(a,b)) : [],
-    has("pairs") ? getAdminRows<ExportData["pairs"][number]>((a,b) => db.from("swm_dish_pairings").select("dish_id,wine_id,slot")
+    has("pairs") ? getAdminRows<ExportData["pairs"][number]>((a,b) => db.from("swm_dish_pairings").select("dish_id,wine_id,slot,serving_mode")
       .eq("restaurant_id",id).order("dish_id").order("slot").range(a,b)) : [],
   ]);
   return { restaurant: restaurant.data, wines, menu, drinks, categoryOrder, pairs };

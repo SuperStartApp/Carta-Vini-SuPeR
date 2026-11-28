@@ -1,5 +1,8 @@
 "use client";
 
+import type { PublicPairing } from "../lib/menu";
+import type { ServingMode } from "../lib/pairing-mode";
+
 import { useId, useRef, useState } from "react";
 import { Beer, Circle, Citrus, Coffee, CupSoda, GlassWater, Info, Martini, Search, Sparkles, Wine, WineOff, X } from "lucide-react";
 import { allergenLegend } from "../lib/allergen-legend";
@@ -45,9 +48,9 @@ function drinkCategoryIcon(category: Label) {
 }
 
 export function PublicDishes({ categories, wines = [], lang, money, onWine, kind = "menu" }: {
-  categories: (Label & { dishes: (PublicItem & { paired_wine_ids?: string[] })[] })[];
+  categories: (Label & { dishes: (PublicItem & { paired_wine_ids?: string[]; pairings?: PublicPairing[] })[] })[];
   wines?: PublicWine[]; lang: Language; money: Intl.NumberFormat;
-  onWine?: (wine: PublicWine, dishId: string) => void; kind?: ListKind;
+  onWine?: (wine: PublicWine, dishId: string, mode: ServingMode) => void; kind?: ListKind;
 }) {
   const [query, setQuery] = useState("");
   const [categoryId, setCategory] = useState("");
@@ -105,7 +108,11 @@ export function PublicDishes({ categories, wines = [], lang, money, onWine, kind
         <h2 className="dish-category-title">{text(category, lang)}</h2>
         <div className="dish-list">{category.dishes.map(dish => {
           const description = details(dish, lang);
-          const pairs = (dish.paired_wine_ids ?? []).flatMap(id => { const wine = wineById.get(id); return wine ? [wine] : []; });
+          const pairs = (dish.pairings ?? (dish.paired_wine_ids ?? []).map(wine_id => ({ wine_id, mode: "both" as const })))
+            .flatMap(({ wine_id, mode }) => {
+              const wine = wineById.get(wine_id);
+              return wine && (mode !== "glass" || (wine.glass_price ?? 0) > 0) ? [{ wine, mode }] : [];
+            });
           return <article className="dish-card" key={dish.id} id={`${kind === "cocktail" ? "cocktail" : "dish"}-${dish.id}`} tabIndex={-1}>
             <header><h3>{text(dish, lang)}</h3><strong>{money.format(dish.price)}</strong></header>
             {description && <p className="dish-description">{description}</p>}
@@ -121,14 +128,15 @@ export function PublicDishes({ categories, wines = [], lang, money, onWine, kind
             </section>}
             {onWine && pairs.length > 0 && <section className="dish-pairings">
               <h4 className="flex items-center gap-1.5"><Wine size={15} aria-hidden="true" />{t.pairing}</h4>
-              <ul>{pairs.map(wine => {
+              <ul>{pairs.map(({ wine, mode }) => {
                 const image = safeImage(wine.image_url);
                 return <li key={wine.id}>
-                <button type="button" onClick={() => onWine(wine, dish.id)} title={t.openWine}>
+                <button type="button" onClick={() => onWine(wine, dish.id, mode)} title={t.openWine}>
                   {image && <ExternalImage url={image} alt="" className="h-14 w-10 shrink-0 object-contain" />}
                   <span className="min-w-0 wrap-break-word"><strong>{wine.name}</strong><span className="block text-neutral-700">{wine.winery.name}</span>
-                    <span className="block">{t.bottle} {money.format(wine.bottle_price)}
-                      {wine.glass_price != null && wine.glass_price > 0 && ` · ${t.glass} ${money.format(wine.glass_price)}`}</span>
+                    <span className="block">{mode !== "glass" && `${t.bottle} ${money.format(wine.bottle_price)}`}
+                      {mode !== "bottle" && wine.glass_price != null && wine.glass_price > 0
+                        && `${mode === "both" ? " · " : ""}${t.glass} ${money.format(wine.glass_price)}`}</span>
                   </span>
                 </button>
               </li>; })}</ul>

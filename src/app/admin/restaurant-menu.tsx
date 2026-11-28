@@ -3,6 +3,7 @@ import type { Assignment } from "../../lib/models";
 import { listTables, type Allergen, type Dish, type ListKind, type MenuCategory, type PairingOption } from "../../lib/menu";
 import { records, requireAdmin } from "../../lib/supabase";
 import { MenuBoard } from "../../components/admin-menu";
+import type { ServingMode } from "../../lib/pairing-mode";
 
 export async function RestaurantMenu({ id, kind = "menu" }: { id: string; kind?: ListKind }) {
   const { db } = await requireAdmin();
@@ -10,20 +11,21 @@ export async function RestaurantMenu({ id, kind = "menu" }: { id: string; kind?:
   const [categories, dishRows, allergenRows, allergenLinks, pairingLinks, assignments, wines, refs] = await Promise.all([
     getAdminRows<MenuCategory>((a, b) => db.from(tables.categories).select("id,name_it,name_en,position")
       .eq("restaurant_id", id).order("position").order("name_it").order("id").range(a, b)),
-    getAdminRows<Omit<Dish, "allergen_ids" | "wine_ids">>((a, b) => db.from(tables.items)
+    getAdminRows<Omit<Dish, "allergen_ids" | "wine_ids" | "serving_modes">>((a, b) => db.from(tables.items)
       .select("id,category_id,name_it,name_en,description_it,description_en,price,status,position")
       .eq("restaurant_id", id).order("position").order("name_it").order("id").range(a, b)),
     db.from("swm_allergens").select("*").order("id"),
     getAdminRows<Record<typeof tables.itemKey, string> & { allergen_id: number }>((a, b) => db.from(tables.allergens)
       .select(`${tables.itemKey},allergen_id`).eq("restaurant_id", id).order(tables.itemKey).order("allergen_id").range(a, b)),
-    kind === "menu" ? getAdminRows<{ dish_id: string; wine_id: string }>((a, b) => db.from("swm_dish_pairings")
-      .select("dish_id,wine_id").eq("restaurant_id", id).order("dish_id").order("slot").range(a, b)) : [],
+    kind === "menu" ? getAdminRows<{ dish_id: string; wine_id: string; serving_mode: ServingMode }>((a, b) => db.from("swm_dish_pairings")
+      .select("dish_id,wine_id,serving_mode").eq("restaurant_id", id).order("dish_id").order("slot").range(a, b)) : [],
     kind === "menu" ? getAdminRows<Assignment>((a, b) => db.from("swm_restaurant_wines")
-      .select("wine_id,bottle_price,glass_price,status").eq("restaurant_id", id).order("wine_id").range(a, b)) : [],
+      .select("wine_id,bottle_price,glass_price,glass_enabled,status").eq("restaurant_id", id).order("wine_id").range(a, b)) : [],
     kind === "menu" ? getWines() : [], kind === "menu" ? getReferences() : null,
   ]);
   const allergenIds = new Map<string, number[]>();
   const wineIds = new Map<string, string[]>();
+  const modes = new Map<string, ServingMode[]>();
   for (const link of allergenLinks) {
     const itemId = link[tables.itemKey];
     const ids = allergenIds.get(itemId) ?? [];
@@ -34,11 +36,15 @@ export async function RestaurantMenu({ id, kind = "menu" }: { id: string; kind?:
     const ids = wineIds.get(link.dish_id) ?? [];
     ids.push(link.wine_id);
     wineIds.set(link.dish_id, ids);
+    const selectedModes = modes.get(link.dish_id) ?? [];
+    selectedModes.push(link.serving_mode);
+    modes.set(link.dish_id, selectedModes);
   }
   const dishes: Dish[] = dishRows.map(dish => ({
     ...dish,
     allergen_ids: allergenIds.get(dish.id) ?? [],
     wine_ids: wineIds.get(dish.id) ?? [],
+    serving_modes: modes.get(dish.id) ?? [],
   }));
   const byWine = new Map(wines.map(wine => [wine.id, wine]));
   const byWinery = new Map(refs?.wineries.map(winery => [winery.id, winery.name]));

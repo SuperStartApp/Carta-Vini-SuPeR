@@ -1,4 +1,5 @@
 import type { Assignment, Label, Status } from "./models";
+import type { ServingMode } from "./pairing-mode";
 
 export type Allergen = {
   id: number;
@@ -18,13 +19,14 @@ export type PublicItem = {
   allergens: Allergen[];
 };
 
-export type PublicDish = PublicItem & { paired_wine_ids: string[] };
+export type PublicPairing = { wine_id: string; mode: ServingMode };
+export type PublicDish = PublicItem & { paired_wine_ids: string[]; pairings?: PublicPairing[] };
 export type PublicMenuCategory = Label & { dishes: PublicDish[] };
 export type PublicCocktailCategory = Label & { cocktails: PublicItem[] };
 export type MenuCategory = Label & { position: number };
 export type Dish = Omit<PublicItem, "allergens"> & {
   category_id: string; position: number; status: Status;
-  allergen_ids: number[]; wine_ids: string[];
+  allergen_ids: number[]; wine_ids: string[]; serving_modes: ServingMode[];
 };
 export type PairingOption = Assignment & { name: string; winery: string; category: string };
 

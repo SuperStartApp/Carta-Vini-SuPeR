@@ -39,6 +39,14 @@ Il collaudo manuale è approvato, incluse la scansione da smartphone, l'apertura
 
 ## SuPeR Smart Service
 
+### Fase 5.5 · Smart Pairing
+
+Collaudo manuale approvato. La migrazione 5.5 è installata sul Supabase ufficiale con 6/6 controlli post-installazione confermati dall’amministratore.
+
+Nella scheda del piatto del gestionale e nel tab **Abbinamenti** di Smart Service, scegliere **Bottiglia**, **Calice** o **Entrambi** per ciascuno dei due vini consigliati. Calice ed Entrambi si possono impostare quando l’assegnazione ha mescita attiva e prezzo calice positivo. La carta usa i prezzi correnti dell’assegnazione. Se la mescita si interrompe, Calice scompare e Entrambi mostra solo Bottiglia. Il ripristino della mescita riattiva la visualizzazione senza risalvare il piatto.
+
+Il flag **Mostra sezione Vini al calice** riguarda il tab pubblico. Con il tab nascosto l’abbinamento al calice continua a funzionare e apre la referenza nella categoria ordinaria con il prezzo consigliato. Il foglio **Abbinamenti gastronomici** di Export Studio riporta modalità, prezzi pubblicabili e disponibilità effettiva. Per allestire un database isolato usare la [migrazione 5.5](supabase/migrations/20261128000000_swm_smart_pairing.sql) e i [controlli in sola lettura](supabase/verify/20261128000000_swm_smart_pairing.sql).
+
 ### Fasi 5.2 e 5.4 · Abbinamenti ed Export Studio
 
 L’amministratore ha approvato il collaudo manuale e l’indicatore di caricamento, installato la migrazione 5.2 sul Supabase ufficiale e confermato 5/5 controlli. Il progetto ufficiale ha `Max Rows` pari a 1.000. Export Studio legge pagine da 500 righe e richiede un limite di almeno 500 anche in un futuro progetto dedicato.

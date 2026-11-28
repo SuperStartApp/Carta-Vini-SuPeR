@@ -49,7 +49,10 @@ Applicare in ordine lessicografico soltanto su una destinazione nuova. Le defini
 | `20261127000002` | Disponibilità operativa, concorrenza e storico. |
 | `20261127000003` | Account Manager, registro dedicato e blocco credenziali. L’amministratore ha confermato l’applicazione manuale e 5/5 controlli sul Supabase ufficiale. |
 | `20261127000004` | Abbinamenti Smart Service, tipo `pairings` nello storico e controllo concorrente facoltativo nel JSON `swm_save_dish`. Installata manualmente sul Supabase ufficiale, con 5/5 controlli confermati dall’amministratore. |
+| `20261128000000` | Smart Pairing. `swm_dish_pairings.serving_mode` è obbligatoria, ammette `bottle`, `glass`, `both` e parte da `bottle`. Installata sul Supabase ufficiale con 6/6 controlli post-installazione confermati dall’amministratore. |
 
 Export Studio usa le tabelle e relazioni esistenti con i permessi amministrativi. Non aggiunge oggetti SQL. Lo storico `pairings` rappresenta gli UUID come array JSON testuali in `previous_state` e `new_state`, in ordine di slot.
+
+Con la 5.5, `swm_service_save_pairing_modes` estende la scrittura operativa con gli array delle modalità attese e desiderate. La firma precedente `swm_service_save_pairings` resta disponibile. Le letture operative includono l’idoneità al calice. Nei nuovi eventi `pairings`, `previous_state` e `new_state` contengono un oggetto JSON testuale con gli array `vini` e `modalita`. Le righe storiche restano leggibili e conservano il formato originario.
 
 Le letture di Export Studio usano intervalli da 500 righe con ordinamento deterministico. Il limite `Max Rows` di PostgREST sul progetto ufficiale è 1.000, come verificato dall’amministratore. Una destinazione deve mantenere un limite di almeno 500 per evitare pagine abbreviate interpretate come fine dati.

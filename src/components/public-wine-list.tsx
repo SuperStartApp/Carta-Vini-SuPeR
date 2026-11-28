@@ -6,6 +6,7 @@ import type { Label } from "../lib/models";
 import type { PublicCocktailCategory, PublicMenuCategory } from "../lib/menu";
 import { searchable } from "../lib/search";
 import { regionRank } from "../lib/wine-geography";
+import type { ServingMode } from "../lib/pairing-mode";
 import { emptyFilters, selectFilters, WineFilterPanel, type FilterOptions, type SelectFilter, type WineFilters } from "./public-wine-filters";
 import { PublicDishes } from "./public-dishes";
 import { PublicFooter } from "./public-footer";
@@ -116,7 +117,7 @@ function accentColors(hex: string) {
   } as CSSProperties;
 }
 
-function WineRow({ wine, lang, money, onBack, glassOnly }: { wine: PublicWine; lang: Language; money: Intl.NumberFormat; onBack?: () => void; glassOnly?: boolean }) {
+function WineRow({ wine, lang, money, onBack, glassOnly, mode }: { wine: PublicWine; lang: Language; money: Intl.NumberFormat; onBack?: () => void; glassOnly?: boolean; mode?: ServingMode }) {
   const t = copy[lang];
   const nose = translated(wine.nose_it, wine.nose_en, lang);
   const palate = translated(wine.palate_it, wine.palate_en, lang);
@@ -155,8 +156,8 @@ function WineRow({ wine, lang, money, onBack, glassOnly }: { wine: PublicWine; l
           {characteristics.map(item => <li key={item.id}>{item.name}</li>)}
         </ul>}
         <dl className="wine-prices">
-          {!glassOnly && <div><dt>{t.bottle}</dt><dd>{money.format(wine.bottle_price)}</dd></div>}
-          {wine.glass_price != null && wine.glass_price > 0 && <div><dt>{t.glassPrice}</dt><dd>{money.format(wine.glass_price)}</dd></div>}
+          {!glassOnly && mode !== "glass" && <div><dt>{t.bottle}</dt><dd>{money.format(wine.bottle_price)}</dd></div>}
+          {mode !== "bottle" && wine.glass_price != null && wine.glass_price > 0 && <div><dt>{t.glassPrice}</dt><dd>{money.format(wine.glass_price)}</dd></div>}
         </dl>
       </div>
     </div>
@@ -191,7 +192,7 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
   const [view, setView] = useState<"wine" | "menu" | "cocktail">(
     menu.wines.length ? "wine" : hasMenu ? "menu" : hasCocktails ? "cocktail" : "wine",
   );
-  const [pairing, setPairing] = useState<{ wineId: string; dishId: string }>();
+  const [pairing, setPairing] = useState<{ wineId: string; dishId: string; mode: ServingMode }>();
   const [destination, setDestination] = useState<{ id: string }>();
   const [lang, setLang] = useState<Language>("it");
   const [search, setSearch] = useState("");
@@ -266,6 +267,7 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
       {regions.map(({ region, wines }) => <section className="region-group" key={region.id}>
         <Region className="region-title">{label(region, lang)}</Region>
         {wines.map(wine => <WineRow key={wine.id} wine={wine} lang={lang} money={money} glassOnly={glassOnly}
+          mode={pairing?.wineId === wine.id ? pairing.mode : undefined}
           onBack={pairing?.wineId === wine.id ? () => {
             setView("menu"); setDestination({ id: `dish-${pairing.dishId}` }); setPairing(undefined);
           } : undefined} />)}
@@ -307,7 +309,7 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
       {hasCocktails && <div hidden={view !== "cocktail"}><PublicDishes kind="cocktail" lang={lang} money={money}
         categories={cocktails.map(category => ({ ...category, dishes: category.cocktails }))} /></div>}
       {hasMenu && <div hidden={view !== "menu"}><PublicDishes categories={dishes} wines={menu.wines} lang={lang} money={money}
-        onWine={(wine, dishId) => {
+        onWine={(wine, dishId, mode) => {
           if (!searched.some(result => result.id === wine.id)) setSearch("");
           setFilters(current => {
             const compatible = { ...emptyFilters, glass: current.glass && (wine.glass_price ?? 0) > 0 };
@@ -317,8 +319,8 @@ export function PublicWineList({ menu }: { menu: PublicMenu }) {
             compatible.characteristics = current.characteristics.filter(id => wine.characteristics?.some(item => item.id === id));
             return compatible;
           });
-          setCategory(wine.category_id);
-          setPairing({ wineId: wine.id, dishId }); setView("wine"); setDestination({ id: `wine-${wine.id}` });
+          setCategory(mode === "glass" && hasGlass ? "glass" : wine.category_id);
+          setPairing({ wineId: wine.id, dishId, mode }); setView("wine"); setDestination({ id: `wine-${wine.id}` });
         }} /></div>}
       <div hidden={view !== "wine"}>
       {menu.wines.length > 0 && <>

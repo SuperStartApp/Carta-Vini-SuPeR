@@ -1,6 +1,7 @@
 "use server";
 
 import { serviceUuid } from "../../lib/service";
+import { isServingMode, type ServingMode } from "../../lib/pairing-mode";
 import type { PairingWine } from "../../lib/service-pairings";
 import { sessionClient } from "../../lib/supabase";
 
@@ -17,16 +18,19 @@ export async function findPairingWines(restaurant: string, form: FormData) {
   return { wines: wines.slice(0, 30), more: wines.length > 30 };
 }
 
-export async function saveServicePairings(restaurant: string, dish: string, expected: string[], desired: string[]) {
+export async function saveServicePairings(restaurant: string, dish: string, expected: string[], desired: string[],
+  expectedModes: ServingMode[], desiredModes: ServingMode[]) {
   const valid = (ids: string[]) => Array.isArray(ids) && ids.length <= 2 && new Set(ids).size === ids.length
     && ids.every(id => typeof id === "string" && serviceUuid.test(id));
-  if (!serviceUuid.test(restaurant) || !serviceUuid.test(dish) || !valid(expected) || !valid(desired)) {
-    return { error: "Seleziona fino a due vini differenti." };
+  if (!serviceUuid.test(restaurant) || !serviceUuid.test(dish) || !valid(expected) || !valid(desired)
+    || !Array.isArray(expectedModes) || !Array.isArray(desiredModes) || expectedModes.length !== expected.length
+    || desiredModes.length !== desired.length || ![...expectedModes,...desiredModes].every(isServingMode)) {
+    return { error: "Seleziona fino a due vini differenti e verifica la modalità di servizio." };
   }
   const db = await sessionClient("service");
   if (!db || !(await db.auth.getUser()).data.user) return { error: "Accesso non autorizzato." };
-  const result = await db.rpc("swm_service_save_pairings", {
-    target_restaurant: restaurant, target_dish: dish, expected, desired,
+  const result = await db.rpc("swm_service_save_pairing_modes", {
+    target_restaurant: restaurant, target_dish: dish, expected, desired, expected_modes: expectedModes, desired_modes: desiredModes,
   }).retry(false);
   if (result.error?.code === "42501") return { error: "Accesso non autorizzato o revocato." };
   if (result.error?.code === "22023") return { error: "Uno dei vini non è più selezionabile. Ripeti la ricerca." };

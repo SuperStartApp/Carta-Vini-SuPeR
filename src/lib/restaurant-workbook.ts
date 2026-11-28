@@ -2,6 +2,7 @@ import ExcelJS from "exceljs";
 import { statuses, type Status } from "./models";
 import type { ExportData, ExportItem, ExportOptions, ExportWine } from "./restaurant-export-data";
 import { regionRank } from "./wine-geography";
+import { servingModes, type ServingMode } from "./pairing-mode";
 
 type Value = string | number | null;
 type Column = { name: string; width: number; currency?: boolean };
@@ -11,9 +12,10 @@ const wineColumns = columns(["Categoria",20],["Nazione",18],["Regione",22],["Can
   ["Vitigni",33],["Affinamenti",26],["Caratteristiche",28],["Prezzo bottiglia",18,true],["Prezzo al calice",18,true],
   ["Disponibilità bottiglia",24],["Stato mescita",20]);
 const itemColumns = columns(["Categoria",25],["Nome",32],["Descrizione",55],["Prezzo",15,true],["Allergeni",38],["Disponibilità",22]);
-const pairColumns = columns(["Categoria piatto",24],["Piatto",30],["Primo vino consigliato",29],["Cantina 1",25],["Annata 1",11],
-  ["Formato 1 (ml)",16],["Disponibilità 1",23],["Secondo vino consigliato",29],["Cantina 2",25],["Annata 2",11],
-  ["Formato 2 (ml)",16],["Disponibilità 2",23]);
+const pairColumns = columns(["Categoria piatto",24],["Piatto",30], ...[1,2].flatMap((slot): [string,number,boolean?][] => [
+  [slot === 1 ? "Primo vino consigliato" : "Secondo vino consigliato",29],[`Cantina ${slot}`,25],[`Annata ${slot}`,11],
+  [`Formato ${slot} (ml)`,16],[`Servizio ${slot}`,16],[`Bottiglia ${slot}`,16,true],[`Calice ${slot}`,16,true],[`Disponibilità ${slot}`,24],
+]));
 const inventoryColumns = columns(["Quantità rilevata",20],["Unità di misura",20],["Scorta minima",17],["Note inventario",33]);
 const compare = (a: string, b: string) => a.localeCompare(b,"it");
 
@@ -102,23 +104,31 @@ export function restaurantWorkbook(data: ExportData, options: ExportOptions, dat
   const menu = sorted(data.menu.filter(item => include(item.status)));
   const drinks = sorted(data.drinks.filter(item => include(item.status)));
   const wineById = new Map(data.wines.map(row => [row.wine_id,row]));
-  const links = new Map<string, Map<number, ExportWine>>();
+  const links = new Map<string, Map<number, { assigned: ExportWine; mode: ServingMode }>>();
   for (const pair of data.pairs) {
     const wine = wineById.get(pair.wine_id);
     if (!wine) throw new Error("Abbinamento incoerente durante la lettura.");
     const map = links.get(pair.dish_id) ?? new Map();
-    map.set(pair.slot,wine);
+    map.set(pair.slot,{ assigned: wine, mode: pair.serving_mode ?? "bottle" });
     links.set(pair.dish_id,map);
   }
   const pairs = has("pairs") ? sorted(data.menu).flatMap(dish => {
     const map = links.get(dish.id);
     if (!map) return [];
     const pair = (slot: number): Value[] => {
-      const row = map.get(slot);
-      if (!row) return [null,null,null,null,null];
-      if (!include(dish.status === "available" ? row.status : dish.status)) return [null,null,null,null,null];
-      return [row.wine.name,row.wine.winery.name,row.wine.vintage,row.wine.volume_ml,
-        dish.status !== "available" ? `Piatto: ${statuses[dish.status]}` : statuses[row.status]];
+      const link = map.get(slot);
+      const blank = Array<Value>(8).fill(null);
+      if (!link) return blank;
+      const { assigned: row, mode } = link;
+      const glass = row.glass_enabled !== false && (row.glass_price ?? 0) > 0;
+      const productStatus = dish.status === "available" ? row.status : dish.status;
+      const status = productStatus === "available" && mode === "glass" && !glass ? "unavailable" : productStatus;
+      if (!include(status)) return blank;
+      const label = productStatus !== "available" ? statuses[productStatus]
+        : mode === "glass" && !glass ? "Mescita non disponibile" : mode === "both" && !glass ? "Solo bottiglia" : statuses.available;
+      return [row.wine.name,row.wine.winery.name,row.wine.vintage,row.wine.volume_ml,servingModes[mode],
+        status === "available" && mode !== "glass" ? row.bottle_price : null,
+        status === "available" && mode !== "bottle" && glass ? row.glass_price : null,label];
     };
     const first = pair(1), second = pair(2);
     return first[0] === null && second[0] === null ? [] : [[dish.category.name_it,dish.name_it,...first,...second]];

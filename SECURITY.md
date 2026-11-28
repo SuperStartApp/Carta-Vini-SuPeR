@@ -20,6 +20,8 @@ Le sessioni del gestionale e di Smart Service usano cookie separati. Il cookie o
 
 Le RPC degli abbinamenti applicano sessione, credenziali, membership, area e permesso dedicato. La scrittura verifica coerentemente piatto, assegnazioni, disponibilità delle nuove scelte e stato atteso. La cancellazione e il reinserimento dei legami e l’audit sono nella stessa transazione. I valori sorgente dell’export sono inseriti come celle di testo o numeri, senza formule generate da input. Il POST di download verifica direttamente la sessione amministrativa, usa RLS, restituisce `private, no-store` e non legge la Secret key 5.3.
 
+La 5.5 applica gli stessi controlli a `swm_service_save_pairing_modes` e verifica la mescita sulle assegnazioni bloccate durante il salvataggio. Gli abbinamenti conservati possono mantenere una modalità temporaneamente non pubblicabile. Le modifiche concorrenti effettuate dalla nuova app confrontano anche le modalità. La firma legacy conserva la modalità del vino già abbinato.
+
 ## Gestione delle chiavi
 
 Usare una Secret key dedicata solo in Production e una chiave pubblicabile per i client ordinari. Evitare logging di header, payload di credenziali, dump e screenshot delle impostazioni. Tenere segreti fuori da Git, `NEXT_PUBLIC_`, risposte e telemetria. In caso di esposizione, revocare la chiave, sostituirla, ridistribuire e verificare gli accessi autorizzati. Per un nuovo progetto generare chiavi nuove. Vedere [ENVIRONMENT.md](ENVIRONMENT.md).

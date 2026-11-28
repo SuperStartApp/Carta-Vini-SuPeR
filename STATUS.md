@@ -1,5 +1,11 @@
 # Stato del progetto
 
+## Fase 5.5 · Smart Pairing
+
+- Collaudo manuale e pubblicazione approvati. L’amministratore ha installato `20261128000000_swm_smart_pairing.sql` sul Supabase ufficiale e confermato 6/6 controlli post-installazione. Print Studio, Inventory, Margins, Analytics e Wine Intelligence in standby.
+- In PostgreSQL isolato, 6/6 controlli strutturali. Verificati default Bottiglia, modalità miste, sospensione e riattivazione, prezzi aggiornati, revoca, isolamento, storico e conflitti sulla sola modalità.
+- In Chrome con API isolate verificati i due pannelli, la carta IT/EN, il ritorno al piatto, i Calici nascosti, la sospensione e riattivazione della mescita e il workbook Export Studio. Verificate anche le regressioni su Drink List, QR Studio e la disponibilità del pannello Account Manager. Lint, typecheck, build e `git diff --check` superati.
+
 ## Fasi 5.2 e 5.4 · Abbinamenti ed Export Studio
 
 - Pubblicate con `47afa4d`, dopo il collaudo manuale di Abbinamenti, Export Studio e indicatore. L’amministratore ha installato `20261127000004_swm_service_pairings.sql` sul database ufficiale e confermato 5/5 controlli e `Max Rows` pari a 1.000. Export Studio non richiede migrazioni. I link canonici del pannello ristoratore sono nella scheda Smart Service anche senza account associati.

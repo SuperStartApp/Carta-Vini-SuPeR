@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ActionForm } from "../../components/action-form";
+import { PairingModeSelect } from "../../components/pairing-mode-select";
 import { statuses } from "../../lib/models";
 import type { PairingDish, PairingWine } from "../../lib/service-pairings";
 import { findPairingWines, saveServicePairings } from "./pairing-actions";
@@ -14,11 +15,13 @@ function PairingEditor({ restaurant, dish }: { restaurant: string; dish: Pairing
   const [saved, setSaved] = useState(dish.wines);
   const [wines, setWines] = useState(dish.wines);
   const [found, setFound] = useState<PairingWine[] | null>(null);
+  const modes = (items: PairingWine[]) => items.map(w => w.mode ?? "bottle");
+  const snapshot = (items: PairingWine[]) => JSON.stringify([items.map(w => w.id),modes(items)]);
   return <details className="details">
     <summary className="cursor-pointer"><strong>{dish.name}</strong> · {saved.length}/2</summary>
     <div className="mt-2 grid gap-2">
       <ActionForm run={async () => {
-        const result = await saveServicePairings(restaurant, dish.id, saved.map(w => w.id), wines.map(w => w.id));
+        const result = await saveServicePairings(restaurant, dish.id, saved.map(w => w.id), wines.map(w => w.id), modes(saved), modes(wines));
         if (result.success) setSaved(wines);
         return result;
       }}>
@@ -28,11 +31,13 @@ function PairingEditor({ restaurant, dish }: { restaurant: string; dish: Pairing
             <span>{slot + 1}. {wine ? wineLabel(wine) : "Nessun vino"}</span>
             {wine && <div className="flex flex-wrap items-center gap-2">
               {wine.status !== "available" && <span className="note">{statuses[wine.status]}</span>}
+              <PairingModeSelect mode={wine.mode ?? "bottle"} canGlass={Boolean(wine.can_glass) && wine.status === "available"}
+                onChange={mode => setWines(wines.map(w => w.id === wine.id ? { ...w, mode } : w))} />
               <button type="button" className="secondary compact" onClick={() => setWines(wines.filter(w => w.id !== wine.id))}>Rimuovi vino {slot + 1}</button>
             </div>}
           </div>;
         })}
-        <button className="primary justify-self-start" disabled={saved.map(w => w.id).join() === wines.map(w => w.id).join()}>Salva abbinamenti</button>
+        <button className="primary justify-self-start" disabled={snapshot(saved) === snapshot(wines)}>Salva abbinamenti</button>
       </ActionForm>
       <ActionForm run={async form => {
         setFound(null);

@@ -8,6 +8,8 @@ import { statuses } from "../lib/models";
 import { searchable } from "../lib/search";
 import { ActionForm } from "./action-form";
 import { AllergenIcon } from "./allergen-icon";
+import { PairingModeSelect } from "./pairing-mode-select";
+import type { ServingMode } from "../lib/pairing-mode";
 import { CategoryTabs, countByCategory, ListPagination, ListStatus, ResultCount, useAdminList } from "./admin-list-controls";
 
 const money = new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" });
@@ -24,8 +26,9 @@ function PositionInput({ value }: { value: number }) {
   return <input name="position" type="number" min={0} max={2147483647} step={1} defaultValue={value} required />;
 }
 
-function PairingPicker({ options, selected, onChange }: {
+function PairingPicker({ options, selected, onChange, modes, onMode }: {
   options: PairingOption[]; selected: string[]; onChange: (ids: string[]) => void;
+  modes: Record<string, ServingMode>; onMode: (id: string, mode: ServingMode) => void;
 }) {
   const [query, setQuery] = useState("");
   const byId = new Map(options.map(option => [option.wine_id, option]));
@@ -33,9 +36,13 @@ function PairingPicker({ options, selected, onChange }: {
     && searchable(`${option.name} ${option.winery}`).includes(searchable(query)));
   return <>
     <p className="note">{selected.length} di 2 vini scelti</p>
-    {selected.map(id => <div className="flex items-center justify-between gap-2 rounded-lg border border-line p-2" key={id}>
+    {selected.map(id => <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line p-2" key={id}>
       <input type="hidden" name="wine" value={id} />
+      <input type="hidden" name="serving_mode" value={modes[id] ?? "bottle"} />
       <span>{byId.get(id)?.name ?? "Vino non più assegnato"}</span>
+      {byId.get(id)?.status !== "available" && <span className="note">{statuses[byId.get(id)?.status ?? "unavailable"]}</span>}
+      <PairingModeSelect mode={modes[id] ?? "bottle"} canGlass={byId.get(id)?.glass_enabled === true && (byId.get(id)?.glass_price ?? 0) > 0}
+        onChange={mode => onMode(id, mode)} />
       <button type="button" className="secondary compact" aria-label={`Rimuovi ${byId.get(id)?.name ?? "vino"}`}
         onClick={() => onChange(selected.filter(item => item !== id))}><X size={16} /></button>
     </div>)}
@@ -64,6 +71,8 @@ function DishEditor({ restaurantId, kind, dish, categories, allergens, options, 
 }) {
   const [allergenIds, setAllergens] = useState(dish?.allergen_ids ?? []);
   const [wineIds, setWines] = useState(dish?.wine_ids ?? []);
+  const [modes, setModes] = useState<Record<string, ServingMode>>(() => Object.fromEntries(
+    dish?.wine_ids.map((id, i) => [id,dish.serving_modes[i] ?? "bottle"]) ?? []));
   const drink = kind === "cocktail";
   return <section className="panel">
     <h2 className="mb-3">{dish?.name_it ?? (drink ? "Nuova bevanda" : "Nuovo piatto")}</h2>
@@ -75,7 +84,10 @@ function DishEditor({ restaurantId, kind, dish, categories, allergens, options, 
       return result;
     }}>
       {dish && <input type="hidden" name="expected_status" value={dish.status} />}
-      {dish && kind === "menu" && <input type="hidden" name="expected_pairings" value={JSON.stringify(dish.wine_ids)} />}
+      {dish && kind === "menu" && <>
+        <input type="hidden" name="expected_pairings" value={JSON.stringify(dish.wine_ids)} />
+        <input type="hidden" name="expected_modes" value={JSON.stringify(dish.serving_modes)} />
+      </>}
       <fieldset className="grid gap-3">
         <legend className="mb-2 font-semibold">{drink ? "Informazioni della bevanda" : "Informazioni del piatto"}</legend>
         <div className="fields">
@@ -110,7 +122,10 @@ function DishEditor({ restaurantId, kind, dish, categories, allergens, options, 
       </fieldset>
       {kind === "menu" && <fieldset className="grid gap-2 border-t border-line pt-3">
         <legend className="font-semibold">Abbinamenti consigliati</legend>
-        <PairingPicker options={options} selected={wineIds} onChange={ids => {
+        <PairingPicker options={options} selected={wineIds} modes={modes} onMode={(id, mode) => {
+          setModes({ ...modes, [id]: mode });
+          onDirtyChange(true);
+        }} onChange={ids => {
           setWines(ids);
           onDirtyChange(true);
         }} />

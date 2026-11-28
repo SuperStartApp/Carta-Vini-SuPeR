@@ -26,3 +26,7 @@ Il trasferimento completo, il ripristino delle identità e il cambio progetto no
 Con la 5.2 verificare anche `can_pairings`, lo storico `pairings`, l’ordine degli slot e la coerenza con la carta pubblica. Con la 5.4 confrontare i workbook campione tra origine e destinazione. Gli export scaricati restano presso chi li ha generati. Il trasferimento applicativo non include file Excel.
 
 Verificare `Max Rows` nelle impostazioni Data API di destinazione prima del collaudo. Riprodurre il valore 1.000 dell’origine o assicurare almeno 500 righe per le pagine Export Studio. Provare in isolamento un locale con più di 1.000 referenze e confrontare il totale del file con quello effettivo alla fonte. Verificare le tre nuove RPC con un account dedicato, una revoca del permesso e un token precedente al reset.
+
+Dopo la 5.5 trasferire `serving_mode` insieme a ogni riga di `swm_dish_pairings`. Confrontare modalità e ordine degli slot tra origine e destinazione e verificare una sospensione della mescita nel progetto isolato prima del passaggio.
+
+Il progetto ufficiale ha già applicato `20261128000000_swm_smart_pairing.sql`. Nella futura destinazione applicarla con la sequenza versionata prima di importare le modalità. Eseguire i [controlli 5.5 in sola lettura](supabase/verify/20261128000000_swm_smart_pairing.sql) e confrontare a campione la carta IT/EN e il foglio Abbinamenti del workbook.
